@@ -10,8 +10,6 @@ import websockets
 import json
 import nest_asyncio
 import os
-from cgi import print_form
-from locale import currency
 from dotenv import load_dotenv
 
 nest_asyncio.apply()

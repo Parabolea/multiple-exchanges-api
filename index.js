@@ -1,19 +1,24 @@
 import express from 'express';
 import Redis from 'ioredis';
 import cors from 'cors'
-import { PythonShell } from 'python-shell';
+import {PythonShell} from 'python-shell';
 import {convertToJsonObject} from "./lib/utils.js";
-
-// Initialize Redis client
-const redis = new Redis();
 
 // Set cache expiry time in seconds (15 minutes = 900 seconds)
 const CACHE_EXPIRY = 900;
 
 const app = express();
 
+const PORT = process.env.PORT || 8080
 
-const PORT = 8081;
+// Initialize Redis client
+const redis = Redis.createClient(process.env.REDIS_PORT || 6379, process.env.REDIS_HOST || 'localhost', {
+    connectTimeout: 10000,
+    keepAlive: true
+});
+
+redis.on('connect', () => console.log('Connected to Redis'));
+redis.on('error', (err) => console.error('Redis connection error:', err));
 
 app.use(cors());
 
@@ -24,14 +29,14 @@ app.get('/deribit', async (req, res) => {
         // Check if data is already cached
         const cachedResponse = await redis.get(cacheKey);
 
-        if (cachedResponse) {1
+        if (cachedResponse) {
             console.log('Returning cached Python response');
             return res.json(JSON.parse(cachedResponse)); // Return cached response
         }
 
         // If not cached, execute the Python script
         const pythResponse = await PythonShell.run('./pyth/PortfolioUI.py');
-        console.log({ pythResponse });
+        console.log({pythResponse});
 
         const results = convertToJsonObject(pythResponse[pythResponse.length - 1]);
 
@@ -48,10 +53,15 @@ app.get('/deribit', async (req, res) => {
 
     } catch (error) {
         console.error('Error executing Python script:', error);
-        res.status(500).json({ error: 'Something went wrong' });
+        res.status(500).json({error: 'Something went wrong'});
     }
 });
 
 app.listen(PORT, () => {
     console.log(`Server is running on http://localhost:${PORT}`);
+    console.log('Checking env variables on docker and here: ', {
+        port: process.env.PORT,
+        redis: process.env.REDIS_PORT,
+        env: process.env.DERIBIT_CLIENT_ID,
+    })
 });
