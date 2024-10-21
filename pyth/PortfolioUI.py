@@ -71,7 +71,8 @@ class Portfolio:
                     "vega": vega,
                     "itm": itm
             })
-            return final_positions
+
+        return final_positions
 
 
     def manage_port(self):
