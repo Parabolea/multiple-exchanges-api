@@ -1,8 +1,15 @@
+import { fileURLToPath } from 'url'
 import express from 'express';
 import Redis from 'ioredis';
 import cors from 'cors'
 import {PythonShell} from 'python-shell';
 import {convertToJsonObject} from "./lib/utils.js";
+import * as path from "node:path";
+
+const __filename = fileURLToPath(import.meta.url);
+
+const __dirname = path.dirname(__filename);
+
 
 // Set cache expiry time in seconds (15 minutes = 900 seconds)
 const CACHE_EXPIRY = 900;
@@ -21,6 +28,8 @@ redis.on('connect', () => console.log('Connected to Redis'));
 redis.on('error', (err) => console.error('Redis connection error:', err));
 
 app.use(cors());
+
+app.use('/graphs', express.static(path.join(__dirname, 'pyth/graphs')));
 
 app.get('/deribit', async (req, res) => {
     const cacheKey = 'python-script-response'; // Unique cache key for the Python script
