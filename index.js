@@ -1,10 +1,13 @@
-import { fileURLToPath } from 'url'
+import {fileURLToPath} from 'url'
 import express from 'express';
 import Redis from 'ioredis';
 import cors from 'cors'
 import {PythonShell} from 'python-shell';
 import {convertToJsonObject} from "./lib/utils.js";
 import * as path from "node:path";
+import dotenv from "dotenv"
+
+dotenv.config()
 
 const __filename = fileURLToPath(import.meta.url);
 
