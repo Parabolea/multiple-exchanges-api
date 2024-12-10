@@ -9,16 +9,40 @@ services:
       interval: 10s
       timeout: 5s
       retries: 3
+    networks:
+      - redis_network
 
   app:
     build:
       context: .
       dockerfile: Dockerfile
     container_name: node_app
-    ports:
-      - "8080:8080"
+#    ports:
+#      - "8080:8080"
     depends_on:
       redis:
         condition: service_healthy
     env_file:
       - .env
+    networks:
+      - traefik
+      - redis_network
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=traefik" # This label specifies the Docker network
+#      - "traefik.docker.network=traefik"
+      - "traefik.http.services.app.loadbalancer.server.port=8080"
+      - "traefik.http.routers.app-http.rule=Host(`dbapi.allview-parabolea.com`)"
+      - "traefik.http.routers.app-http.entrypoints=http"
+      - "traefik.http.routers.app-http.middlewares=https-redirect"
+      - "traefik.http.middlewares.https-redirect.redirectscheme.scheme=https"
+      - "traefik.http.routers.app-https.rule=Host(`dbapi.allview-parabolea.com`)"
+      - "traefik.http.routers.app-https.entrypoints=https"
+      - "traefik.http.routers.app-https.tls.certresolver=le"
+      - "traefik.http.routers.app-https.tls.domains[0].main=dbapi.allview-parabolea.com"
+
+networks:
+  traefik:
+    external: true
+  redis_network:
+    internal: true
