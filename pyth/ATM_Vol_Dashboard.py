@@ -15,28 +15,11 @@ nest_asyncio.apply()
 # util.logToConsole('DEBUG')
 ib = IB()
 # 7496 = live, 7497 = paper
-ib.connect('127.0.0.1', 7496, clientId=998)
+ib.connect('127.0.0.1', 7497, clientId=998)
 
 # List of stock symbols to analyze
 stock_symbols = [
-    'AAPL', 'NVDA', 'MSFT', 'AVGO', 'META', 'AMZN', 'TSLA', 'COST', 'GOOG',
-    'NFLX', 'TMUS', 'AMD', 'PEP', 'LIN', 'CSCO', 'ADBE', 'QCOM', 'TXN', 'ISRG',
-    'COIN', 'MSTR', 'YINN', 'USO', 'GDX', 'ARM', 'MU', 'TSM', 'JPM', 'UNH',
-    'XOM', 'V', 'MA', 'HD', 'PG', 'JNJ', 'ABBV', 'CRM',
-    'GOOGL',  'LLY', 'WMT', 'BAC', 'ORCL', 'CVX', 'WFC', 'MRK', 'KO',
-    'ACN', 'NOW', 'DIS', 'MCD', 'IBM', 'PM', 'ABT', 'TMO', 'GE', 'CAT', 'GS',
-    'VZ', 'INTU', 'BKNG', 'AXP', 'SPGI', 'CMCSA', 'MS', 'T', 'NEE', 'RTX',
-    'DHR', 'LOW', 'PGR', 'UBER', 'AMAT', 'HON', 'AMGN', 'ETN', 'UNP', 'PFE',
-    'TJX', 'BLK', 'COP', 'C', 'BX', 'PLTR', 'SYK', 'BSX', 'PANW', 'FI', 'ADP',
-    'SCHW', 'BMY', 'VRTX', 'DE', 'GILD', 'SBUX', 'MMC', 'BA', 'MDT', 'ADI',
-    'LMT', 'CB', 'KKR', 'PLD', 'ANET', 'LRCX', 'INTC', 'UPS', 'MELI', 'APP',
-    'CTAS', 'PYPL', 'KLAC', 'MDLZ', 'SNPS', 'CDNS', 'MAR', 'REGN', 'CRWD',
-    'MRVL', 'CEG', 'FTNT', 'ORLY', 'CSX', 'DASH', 'ASML', 'PDD', 'ADSK', 'PCAR',
-    'CPRT', 'ROP', 'ABNB', 'NXPI', 'TTD', 'CHTR', 'MNST', 'WDAY', 'AEP', 'PAYX',
-    'FANG', 'ROST', 'ODFL', 'FAST', 'DDOG', 'KDP', 'BKR', 'EA', 'TEAM', 'VRSK',
-    'XEL', 'CTSH', 'EXC', 'AZN', 'KHC', 'GEHC', 'LULU', 'MCHP', 'CCEP', 'IDXX',
-    'CSGP', 'TTWO', 'DXCM', 'ZS', 'ANSS', 'ON', 'WBD', 'GFS', 'MDB', 'CDW',
-    'BIIB', 'ILMN', 'SMCI'
+    'AAPL', 'NVDA', 'MSFT', 'AVGO', 'META'
 ]
 
 # List to store the ATM implied volatilities
@@ -70,6 +53,7 @@ def atm_options(ib, underlying_symbol):
     # Define the underlying asset
     underlying = Stock(underlying_symbol, 'SMART', 'USD')
     ib.qualifyContracts(underlying)
+    ib.reqMarketDataType(1)
     spot_ticker = ib.reqMktData(underlying, '', False, False)
     ib.sleep(1)
     
@@ -104,7 +88,8 @@ def atm_options(ib, underlying_symbol):
                             option = Option(underlying_symbol, exp, strike, right, 'SMART')
                             # print(option)
                             ib.qualifyContracts(option)
-                            market_data = ib.reqMktData(option, '106', False, False)
+                            ib.reqMarketDataType(1)
+                            market_data = ib.reqMktData(option, '101,106', False, False)
                             ib.sleep(1)  # Allow time for data to be received
                             # if market_data.modelGreeks:
                             #     delta = market_data.modelGreeks.delta
@@ -139,6 +124,7 @@ for symbol in stock_symbols:
                 continue
             # Convert implied volatility to percentage
             imp_vol_percent = imp_vol * 100
+            print(f"{symbol}: {imp_vol_percent}")
             atm_vol_data.append({'Symbol': symbol, 'ImpliedVolatility': imp_vol_percent})
         else:
             print(f"No suitable ATM call options found for {symbol}. Skipping.")
