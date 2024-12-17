@@ -12,7 +12,7 @@ import nest_asyncio
 nest_asyncio.apply()
 
 # Initialize the IB connection
-util.logToConsole('DEBUG')
+# util.logToConsole('DEBUG')
 ib = IB()
 # 7496 = live, 7497 = paper
 ib.connect('127.0.0.1', 7496, clientId=998)
