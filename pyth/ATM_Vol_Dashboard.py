@@ -20,7 +20,7 @@ nest_asyncio.apply()
 # util.logToConsole('DEBUG')
 ib = IB()
 # 7496 = live, 7497 = paper
-ib.connect('127.0.0.1', 7497, clientId=998)
+ib.connect('127.0.0.1', 7496, clientId=998)
 
 # List of stock symbols to analyze
 stock_symbols = sys.argv[1:] if len(sys.argv) > 1 else ['AAPL', 'NVDA']
@@ -62,7 +62,7 @@ def atm_options(ib, underlying_symbol):
     # Define the underlying asset
     underlying = Stock(underlying_symbol, 'SMART', 'USD')
     ib.qualifyContracts(underlying)
-    ib.reqMarketDataType(3)
+    ib.reqMarketDataType(1)
     spot_ticker = ib.reqMktData(underlying, '', False, False)
     ib.sleep(1)
     
@@ -97,7 +97,7 @@ def atm_options(ib, underlying_symbol):
                             option = Option(underlying_symbol, exp, strike, right, 'SMART')
                             # # print(option)
                             ib.qualifyContracts(option)
-                            ib.reqMarketDataType(3)
+                            ib.reqMarketDataType(1)
                             market_data = ib.reqMktData(option, '101,106', False, False)
                             ib.sleep(1)  # Allow time for data to be received
                             # if market_data.modelGreeks:
