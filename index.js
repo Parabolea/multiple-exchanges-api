@@ -34,7 +34,26 @@ redis.on('error', (err) => console.error('Redis connection error:', err));
 app.use(cors());
 app.use(express.json());
 
-const DEFAULT_TICKERS = ['AAPL', 'META']; // Default tickers
+const DEFAULT_TICKERS = [
+    'AAPL', 'NVDA', 'MSFT', 'AVGO', 'META', 'AMZN', 'TSLA', 'COST', 'GOOG',
+    'NFLX', 'TMUS', 'AMD', 'PEP', 'LIN', 'CSCO', 'ADBE', 'QCOM', 'TXN', 'ISRG',
+    'COIN', 'MSTR', 'YINN', 'USO', 'GDX', 'ARM', 'MU', 'TSM', 'JPM', 'UNH',
+    'XOM', 'V', 'MA', 'HD', 'PG', 'JNJ', 'ABBV', 'CRM',
+    'GOOGL',  'LLY', 'WMT', 'BAC', 'ORCL', 'CVX', 'WFC', 'MRK', 'KO',
+    'ACN', 'NOW', 'DIS', 'MCD', 'IBM', 'PM', 'ABT', 'TMO', 'GE', 'CAT', 'GS',
+    'VZ', 'INTU', 'BKNG', 'AXP', 'SPGI', 'CMCSA', 'MS', 'T', 'NEE', 'RTX',
+    'DHR', 'LOW', 'PGR', 'UBER', 'AMAT', 'HON', 'AMGN', 'ETN', 'UNP', 'PFE',
+    'TJX', 'BLK', 'COP', 'C', 'BX', 'PLTR', 'SYK', 'BSX', 'PANW', 'FI', 'ADP',
+    'SCHW', 'BMY', 'VRTX', 'DE', 'GILD', 'SBUX', 'MMC', 'BA', 'MDT', 'ADI',
+    'LMT', 'CB', 'KKR', 'PLD', 'ANET', 'LRCX', 'INTC', 'UPS', 'MELI', 'APP',
+    'CTAS', 'PYPL', 'KLAC', 'MDLZ', 'SNPS', 'CDNS', 'MAR', 'REGN', 'CRWD',
+    'MRVL', 'CEG', 'FTNT', 'ORLY', 'CSX', 'DASH', 'ASML', 'PDD', 'ADSK', 'PCAR',
+    'CPRT', 'ROP', 'ABNB', 'NXPI', 'TTD', 'CHTR', 'MNST', 'WDAY', 'AEP', 'PAYX',
+    'FANG', 'ROST', 'ODFL', 'FAST', 'DDOG', 'KDP', 'BKR', 'EA', 'TEAM', 'VRSK',
+    'XEL', 'CTSH', 'EXC', 'AZN', 'KHC', 'GEHC', 'LULU', 'MCHP', 'CCEP', 'IDXX',
+    'CSGP', 'TTWO', 'DXCM', 'ZS', 'ANSS', 'ON', 'WBD', 'GFS', 'MDB', 'CDW',
+    'BIIB', 'ILMN', 'SMCI'
+]; // Default tickers
 
 async function initializeStockTickers() {
     try {
