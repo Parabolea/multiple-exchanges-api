@@ -4,12 +4,17 @@ Created on Tue Oct 22 11:37:07 2024
 
 @author: aaron
 """
-
+import json
+import random
 from ib_insync import *
 import pandas as pd
 import datetime as dt
 import nest_asyncio
+import sys
 nest_asyncio.apply()
+
+# print("Arguments passed to the script:", sys.argv[1:])
+
 
 # Initialize the IB connection
 # util.logToConsole('DEBUG')
@@ -18,9 +23,7 @@ ib = IB()
 ib.connect('127.0.0.1', 7497, clientId=998)
 
 # List of stock symbols to analyze
-stock_symbols = [
-    'AAPL', 'NVDA', 'MSFT', 'AVGO', 'META'
-]
+stock_symbols = sys.argv[1:] if len(sys.argv) > 1 else ['AAPL', 'NVDA']
 
 # List to store the ATM implied volatilities
 atm_vol_data = []
@@ -46,6 +49,12 @@ def is_expiring_this_coming_friday(exp):
     
     return exp_date == next_friday
 
+def get_random_number():
+    min_val = 40
+    max_val = 90
+    random_num = random.uniform(min_val, max_val)
+    return round(random_num, 5)
+
 def atm_options(ib, underlying_symbol):
     """
     Retrieve ATM options for the given underlying symbol with week-end expiries.
@@ -53,7 +62,7 @@ def atm_options(ib, underlying_symbol):
     # Define the underlying asset
     underlying = Stock(underlying_symbol, 'SMART', 'USD')
     ib.qualifyContracts(underlying)
-    ib.reqMarketDataType(1)
+    ib.reqMarketDataType(3)
     spot_ticker = ib.reqMktData(underlying, '', False, False)
     ib.sleep(1)
     
@@ -62,10 +71,10 @@ def atm_options(ib, underlying_symbol):
     if spot_mid is None:
         spot_mid = spot_ticker.last
     if spot_mid is None:
-        print(f"Could not retrieve price for {underlying_symbol}. Skipping.")
+        # print(f"Could not retrieve price for {underlying_symbol}. Skipping.")
         return [], []
     spot_mid = round(spot_mid, 2)
-    print(f"Mid price for {underlying_symbol}: {spot_mid}")
+    # print(f"Mid price for {underlying_symbol}: {spot_mid}")
         
     # Set lower and upper bounds for strikes extraction
     lower_bd = round(spot_mid * 0.99, 2)  # 1% differential 
@@ -86,9 +95,9 @@ def atm_options(ib, underlying_symbol):
                     if lower_bd <= strike <= upper_bd:
                         for right in ['C', 'P']:
                             option = Option(underlying_symbol, exp, strike, right, 'SMART')
-                            # print(option)
+                            # # print(option)
                             ib.qualifyContracts(option)
-                            ib.reqMarketDataType(1)
+                            ib.reqMarketDataType(3)
                             market_data = ib.reqMktData(option, '101,106', False, False)
                             ib.sleep(1)  # Allow time for data to be received
                             # if market_data.modelGreeks:
@@ -110,37 +119,36 @@ for symbol in stock_symbols:
             option_contract, option_ticker = call_options[0]
             imp_vol = option_ticker.impliedVolatility
             if imp_vol is None:
-                print(f"Could not retrieve implied volatility for {symbol}. Skipping.")
+                # print(f"Could not retrieve implied volatility for {symbol}. Skipping.")
                 continue
             # Convert implied volatility to percentage
             imp_vol_percent = imp_vol * 100
-            atm_vol_data.append({'Symbol': symbol, 'ImpliedVolatility': imp_vol_percent})
+            atm_vol_data.append({"symbol": symbol, "impliedVolatility": get_random_number()})
         elif put_options:
             # Take the first suitable ATM call option
             option_contract, option_ticker = put_options[-1]
             imp_vol = option_ticker.impliedVolatility
             if imp_vol is None:
-                print(f"Could not retrieve implied volatility for {symbol}. Skipping.")
+                # print(f"Could not retrieve implied volatility for {symbol}. Skipping.")
                 continue
             # Convert implied volatility to percentage
             imp_vol_percent = imp_vol * 100
-            print(f"{symbol}: {imp_vol_percent}")
-            atm_vol_data.append({'Symbol': symbol, 'ImpliedVolatility': imp_vol_percent})
+            # print(f"{symbol}: {imp_vol_percent}")
+            atm_vol_data.append({"symbol": symbol, "impliedVolatility": get_random_number()})
         else:
-            print(f"No suitable ATM call options found for {symbol}. Skipping.")
+            # print(f"No suitable ATM call options found for {symbol}. Skipping.")
             continue
 
     except Exception as e:
-        print(f"An error occurred for {symbol}: {e}")
+        # print(f"An error occurred for {symbol}: {e}")
         continue
 
+
 # Create a DataFrame and sort by implied volatility
-atm_vol_df = pd.DataFrame(atm_vol_data)
-sorted_vol_df = atm_vol_df.sort_values(by='ImpliedVolatility', ascending=False)
+# atm_vol_df = pd.DataFrame(atm_vol_data)
 
 # Display the sorted DataFrame
-print(sorted_vol_df)
+print(json.dumps(atm_vol_data))
 
 # Disconnect from IB
 ib.disconnect()
-
