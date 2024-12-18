@@ -535,7 +535,7 @@ def filter_data_by_date(data, limit_date):
 #     )
 
 if __name__ == "__main__":
-    # print(filter_data_by_date(mock_data.get('data'), '2010-01-01'))
+    print(filter_data_by_date(mock_data.get('data'), '2010-01-01'))
     for indicator in indicators:
         process_and_plot(
             function_name=indicator['function_name'],
