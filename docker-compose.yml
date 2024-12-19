@@ -17,8 +17,8 @@ services:
       context: .
       dockerfile: Dockerfile
     container_name: node_app
-#    ports:
-#      - "8080:8080"
+    ports:
+      - "7496:7496"
     depends_on:
       redis:
         condition: service_healthy
