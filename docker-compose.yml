@@ -27,10 +27,11 @@ services:
     networks:
       - traefik
       - redis_network
+    extra_hosts:
+      - "host.docker.internal:host-gateway" # Map host.docker.internal to the host's gateway
     labels:
       - "traefik.enable=true"
-      - "traefik.docker.network=traefik" # This label specifies the Docker network
-#      - "traefik.docker.network=traefik"
+      - "traefik.docker.network=traefik"
       - "traefik.http.services.app.loadbalancer.server.port=8080"
       - "traefik.http.routers.app-http.rule=Host(`dbapi.allview-parabolea.com`)"
       - "traefik.http.routers.app-http.entrypoints=http"
@@ -40,6 +41,7 @@ services:
       - "traefik.http.routers.app-https.entrypoints=https"
       - "traefik.http.routers.app-https.tls.certresolver=le"
       - "traefik.http.routers.app-https.tls.domains[0].main=dbapi.allview-parabolea.com"
+
 
 networks:
   traefik:
