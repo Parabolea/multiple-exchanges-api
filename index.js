@@ -6,6 +6,7 @@ import {PythonShell} from 'python-shell';
 import {convertToJsonObject} from "./src/lib/utils.js";
 import * as path from "node:path";
 import dotenv from "dotenv"
+import {getRandomNumber, sleep} from "./lib/utils.js";
 
 dotenv.config()
 
@@ -256,17 +257,22 @@ app.delete('/vol-scanner/delete-ticker/:ticker', async (req, res) => {
 app.get('/vol-scanner/scan', async (req, res) => {
     const storedTickers = await redis.get('vol-scanner/stock-tickers');
     const arrayedStoredTickers = JSON.parse(storedTickers)
-    const response = (await PythonShell.run('./pyth/ATM_Vol_Dashboard.py', { args: arrayedStoredTickers, mode: 'json' }))[0]
+    // const response = (await PythonShell.run('./pyth/ATM_Vol_Dashboard.py', { args: arrayedStoredTickers, mode: 'json' }))[0]
     // let response = await redis.get('vol-scanner/scanned');
     // if (!response) {
     //     response = (await PythonShell.run('./pyth/ATM_Vol_Dashboard.py', { args: arrayedStoredTickers, mode: 'json' }))[0]
     // }
     // else response = JSON.parse(response)
     // await redis.set('vol-scanner/scanned', JSON.stringify(response))
+    await sleep(3000)
+    const mockResponse = arrayedStoredTickers.map(ticker => ({
+        symbol: ticker,
+        impliedVolatility: getRandomNumber()
+    }))
     res.status
     (200).json({
         message: 'success',
-        data: response
+        data: mockResponse
     })
     // await redis.del('vol-scanner/scanned')
     // res.status(200).json({})

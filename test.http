@@ -1,0 +1,20 @@
+### GET request to example server
+GET http://localhost:8080/vol-scanner/tickers
+Content-Type: application/json
+
+### GET request to example server
+GET http://localhost:8080/vol-scanner/scan
+Content-Type: application/json
+
+### GET request to example server
+POST http://localhost:8080/vol-scanner/add-ticker
+Content-Type: application/json
+
+{
+  "ticker": "TEST"
+}
+
+###### GET request to example server
+DELETE http://localhost:8080/vol-scanner/delete-ticker/AGAINWW
+Content-Type: application/json
+###
