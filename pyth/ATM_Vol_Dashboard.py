@@ -11,16 +11,22 @@ import pandas as pd
 import datetime as dt
 import nest_asyncio
 import sys
+import os
+from dotenv import load_dotenv
+
 nest_asyncio.apply()
+load_dotenv('../.env')
 
 # print("Arguments passed to the script:", sys.argv[1:])
 
+is_demo = os.getenv('DEMO')
+is_demo_bool = bool(is_demo)
 
 # Initialize the IB connection
 # util.logToConsole('DEBUG')
 ib = IB()
 # 7496 = live, 7497 = paper
-ib.connect('127.0.0.1', 7496, clientId=998)
+ib.connect('localhost', 7497 if is_demo_bool else 7496, clientId=998)
 
 # List of stock symbols to analyze
 stock_symbols = sys.argv[1:] if len(sys.argv) > 1 else ['AAPL', 'NVDA']
@@ -56,13 +62,14 @@ def get_random_number():
     return round(random_num, 5)
 
 def atm_options(ib, underlying_symbol):
+    market_data_type = 3 if is_demo_bool else 1
     """
     Retrieve ATM options for the given underlying symbol with week-end expiries.
     """
     # Define the underlying asset
     underlying = Stock(underlying_symbol, 'SMART', 'USD')
     ib.qualifyContracts(underlying)
-    ib.reqMarketDataType(1)
+    ib.reqMarketDataType(market_data_type)
     spot_ticker = ib.reqMktData(underlying, '', False, False)
     ib.sleep(1)
     
@@ -97,7 +104,7 @@ def atm_options(ib, underlying_symbol):
                             option = Option(underlying_symbol, exp, strike, right, 'SMART')
                             # # print(option)
                             ib.qualifyContracts(option)
-                            ib.reqMarketDataType(1)
+                            ib.reqMarketDataType(market_data_type)
                             market_data = ib.reqMktData(option, '101,106', False, False)
                             ib.sleep(1)  # Allow time for data to be received
                             # if market_data.modelGreeks:
@@ -109,6 +116,7 @@ def atm_options(ib, underlying_symbol):
                             elif right == 'P': # and -0.65 <= delta <= -0.45:
                                 put_options.append((option, market_data))
     return call_options, put_options
+
 
 for symbol in stock_symbols:
     try:
@@ -123,7 +131,8 @@ for symbol in stock_symbols:
                 continue
             # Convert implied volatility to percentage
             imp_vol_percent = imp_vol * 100
-            atm_vol_data.append({"symbol": symbol, "impliedVolatility": get_random_number()})
+            implied_vol_data = get_random_number() if is_demo_bool else imp_vol_percent
+            atm_vol_data.append({"symbol": symbol, "impliedVolatility": implied_vol_data})
         elif put_options:
             # Take the first suitable ATM call option
             option_contract, option_ticker = put_options[-1]
@@ -133,8 +142,9 @@ for symbol in stock_symbols:
                 continue
             # Convert implied volatility to percentage
             imp_vol_percent = imp_vol * 100
+            implied_vol_data = get_random_number() if is_demo_bool else imp_vol_percent
             # print(f"{symbol}: {imp_vol_percent}")
-            atm_vol_data.append({"symbol": symbol, "impliedVolatility": get_random_number()})
+            atm_vol_data.append({"symbol": symbol, "impliedVolatility": implied_vol_data})
         else:
             # print(f"No suitable ATM call options found for {symbol}. Skipping.")
             continue
