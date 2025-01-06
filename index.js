@@ -6,7 +6,6 @@ import {PythonShell} from 'python-shell';
 import {convertToJsonObject} from "./src/lib/utils.js";
 import * as path from "node:path";
 import dotenv from "dotenv"
-import {getRandomNumber, sleep} from "./lib/utils.js";
 
 dotenv.config()
 
@@ -20,7 +19,6 @@ const DEMO = process.env.DEMO || false
 const CACHE_EXPIRY = 900;
 
 const app = express();
-
 const PORT = process.env.PORT || 8080
 
 // Initialize Redis client
@@ -36,7 +34,7 @@ app.use(cors());
 app.use(express.json());
 
 const DEFAULT_TICKERS = [
-    'AAPL', 'NVDA', 'MSFT', 'AVGO', 'META', 'AMZN', 'TSLA', 'COST', 'GOOG',
+    'AAPL', 'NVDA', 'MSFT', 'AVGO', 'META', 'AMZN', 'TSLA'/* 'COST', 'GOOG',
     'NFLX', 'TMUS', 'AMD', 'PEP', 'LIN', 'CSCO', 'ADBE', 'QCOM', 'TXN', 'ISRG',
     'COIN', 'MSTR', 'YINN', 'USO', 'GDX', 'ARM', 'MU', 'TSM', 'JPM', 'UNH',
     'XOM', 'V', 'MA', 'HD', 'PG', 'JNJ', 'ABBV', 'CRM',
@@ -53,7 +51,7 @@ const DEFAULT_TICKERS = [
     'FANG', 'ROST', 'ODFL', 'FAST', 'DDOG', 'KDP', 'BKR', 'EA', 'TEAM', 'VRSK',
     'XEL', 'CTSH', 'EXC', 'AZN', 'KHC', 'GEHC', 'LULU', 'MCHP', 'CCEP', 'IDXX',
     'CSGP', 'TTWO', 'DXCM', 'ZS', 'ANSS', 'ON', 'WBD', 'GFS', 'MDB', 'CDW',
-    'BIIB', 'ILMN', 'SMCI'
+    'BIIB', 'ILMN', 'SMCI'*/
 ]; // Default tickers
 
 async function initializeStockTickers() {
@@ -182,7 +180,7 @@ app.get('/deribit', async (req, res) => {
         }
 
         // If not cached, execute the Python script
-        const pythResponse = await PythonShell.run('./pyth/PortfolioUI.py', );
+        const pythResponse = await PythonShell.run('./pyth/PortfolioUI.py',);
         console.log({pythResponse});
 
         const results = convertToJsonObject(pythResponse[pythResponse.length - 1]);
@@ -205,15 +203,31 @@ app.get('/deribit', async (req, res) => {
 });
 
 app.get('/vol-scanner/tickers', async (req, res) => {
-    const storedTickers = await redis.get('vol-scanner/stock-tickers');
+    let storedTickers = await redis.get('vol-scanner/stock-tickers');
+    if (!storedTickers) {
+        await initializeStockTickers()
+        storedTickers = await redis.get('vol-scanner/stock-tickers')
+    }
     res.status(200).json({
         data: JSON.parse(storedTickers)
     })
 })
 
+app.post('/vol-scanner/clear-cache', async (req, res) => {
+    try {
+        await redis.del('vol-scanner/stock-tickers')
+        await redis.del('vol-scanner/scanned')
+        res.status(200).json({
+            message: 'Clearing redis cache successful'
+        })
+    } catch (e) {
+        res.status(500).json({message: 'Something went wrong with deleting caches'});
+    }
+})
+
 app.post('/vol-scanner/add-ticker', async (req, res) => {
     try {
-        const { body } = req
+        const {body} = req
         const storedTickers = await redis.get('vol-scanner/stock-tickers');
         const arrayStoredTickers = JSON.parse(storedTickers)
 
@@ -224,19 +238,18 @@ app.post('/vol-scanner/add-ticker', async (req, res) => {
             message: 'success',
             data: arrayStoredTickers
         });
-    }
-    catch (e) {
+    } catch (e) {
         res.status(500).json({error: e instanceof Error ? e.message : e});
     }
 })
 
-app.delete('/vol-scanner/delete-ticker/:ticker', async (req, res) => {
+app.post('/vol-scanner/delete-ticker', async (req, res) => {
     try {
-        const { ticker } = req.params
+        const {ticker} = req.body
         const storedTickers = await redis.get('vol-scanner/stock-tickers');
         const arrayStoredTickers = JSON.parse(storedTickers)
 
-        console.log({ arrayStoredTickers, ticker })
+        console.log({arrayStoredTickers, ticker})
         if (ticker && !arrayStoredTickers.find(item => item.toLowerCase() === ticker.toLowerCase())) {
             console.error('Ticker you wish to delete is not on the list');
             res.status(400).json({error: 'Ticker you wish to delete is not on the list'});
@@ -248,34 +261,40 @@ app.delete('/vol-scanner/delete-ticker/:ticker', async (req, res) => {
             message: 'deleted',
             data: deletedList
         })
-    }
-    catch (e) {
+    } catch (e) {
         res.status(500).json({error: e instanceof Error ? e.message : e});
     }
 })
 
 app.get('/vol-scanner/scan', async (req, res) => {
-    const storedTickers = await redis.get('vol-scanner/stock-tickers');
-    const arrayedStoredTickers = JSON.parse(storedTickers)
-    // const response = (await PythonShell.run('./pyth/ATM_Vol_Dashboard.py', { args: arrayedStoredTickers, mode: 'json' }))[0]
-    // let response = await redis.get('vol-scanner/scanned');
-    // if (!response) {
-    //     response = (await PythonShell.run('./pyth/ATM_Vol_Dashboard.py', { args: arrayedStoredTickers, mode: 'json' }))[0]
-    // }
-    // else response = JSON.parse(response)
-    // await redis.set('vol-scanner/scanned', JSON.stringify(response))
-    await sleep(3000)
-    const mockResponse = arrayedStoredTickers.map(ticker => ({
-        symbol: ticker,
-        impliedVolatility: getRandomNumber()
-    }))
-    res.status
-    (200).json({
-        message: 'success',
-        data: mockResponse
-    })
-    // await redis.del('vol-scanner/scanned')
-    // res.status(200).json({})
+    console.log('Clearing past scanned data...')
+    await redis.del('vol-scanner/scanned')
+    console.log('Cleared!')
+    console.log('Now scanning from the TWS app...')
+    try {
+        const storedTickers = await redis.get('vol-scanner/stock-tickers');
+        const arrayedStoredTickers = JSON.parse(storedTickers)
+        // const response = (await PythonShell.run('./pyth/ATM_Vol_Dashboard.py', { args: arrayedStoredTickers, mode: 'json' }))[0]
+        const response = (await PythonShell.run('./pyth/ATM_Vol_Dashboard.py', {
+                args: arrayedStoredTickers,
+                mode: 'json'
+            }))[0]
+        console.log(`Tickers successfully scanned: ${JSON.stringify(response)}`)
+        await redis.set('vol-scanner/scanned', JSON.stringify(response))
+        // await sleep(3000)
+        // const mockResponse = arrayedStoredTickers.map(ticker => ({
+        //     symbol: ticker,
+        //     impliedVolatility: getRandomNumber()
+        // }))
+        res.status
+        (200).json({
+            message: 'success',
+            data: response
+        })
+        // res.status(200).json(response)
+    } catch (e) {
+        res.status(500).json({error: e instanceof Error ? e.message : e});
+    }
 })
 
 initializeStockTickers().then(() => {
