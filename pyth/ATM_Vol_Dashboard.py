@@ -26,7 +26,7 @@ is_demo_bool = bool(is_demo)
 # util.logToConsole('DEBUG')
 ib = IB()
 # 7496 = live, 7497 = paper
-ib.connect('localhost', 7497 if is_demo_bool else 7496, clientId=998)
+ib.connect('localhost', 7497 if is_demo_bool else 7496, clientId=999)
 
 # List of stock symbols to analyze
 stock_symbols = sys.argv[1:] if len(sys.argv) > 1 else ['AAPL', 'NVDA']
@@ -150,7 +150,7 @@ for symbol in stock_symbols:
             continue
 
     except Exception as e:
-        # print(f"An error occurred for {symbol}: {e}")
+        print(f"An error occurred for {symbol}: {e}")
         continue
 
 
