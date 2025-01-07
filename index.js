@@ -34,7 +34,7 @@ app.use(cors());
 app.use(express.json());
 
 const DEFAULT_TICKERS = [
-    'AAPL', 'NVDA', 'MSFT', 'AVGO', 'META', 'AMZN', 'TSLA'/* 'COST', 'GOOG',
+    'AAPL', 'NVDA', 'MSFT', 'AVGO', 'META', 'AMZN', 'TSLA', 'COST', 'GOOG',
     'NFLX', 'TMUS', 'AMD', 'PEP', 'LIN', 'CSCO', 'ADBE', 'QCOM', 'TXN', 'ISRG',
     'COIN', 'MSTR', 'YINN', 'USO', 'GDX', 'ARM', 'MU', 'TSM', 'JPM', 'UNH',
     'XOM', 'V', 'MA', 'HD', 'PG', 'JNJ', 'ABBV', 'CRM',
@@ -51,7 +51,7 @@ const DEFAULT_TICKERS = [
     'FANG', 'ROST', 'ODFL', 'FAST', 'DDOG', 'KDP', 'BKR', 'EA', 'TEAM', 'VRSK',
     'XEL', 'CTSH', 'EXC', 'AZN', 'KHC', 'GEHC', 'LULU', 'MCHP', 'CCEP', 'IDXX',
     'CSGP', 'TTWO', 'DXCM', 'ZS', 'ANSS', 'ON', 'WBD', 'GFS', 'MDB', 'CDW',
-    'BIIB', 'ILMN', 'SMCI'*/
+    'BIIB', 'ILMN', 'SMCI'
 ]; // Default tickers
 
 async function initializeStockTickers() {

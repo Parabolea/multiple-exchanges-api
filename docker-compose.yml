@@ -22,8 +22,10 @@ services:
         condition: service_healthy
     env_file:
       - .env
-    ports:
-      - "3001:3001"
+#    ports:
+#      - "3001:7497"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     networks:
       - traefik
       - redis_network
@@ -39,9 +41,9 @@ services:
       - "traefik.http.routers.app-https.entrypoints=https"
       - "traefik.http.routers.app-https.tls.certresolver=le"
       - "traefik.http.routers.app-https.tls.domains[0].main=dbapi.allview-parabolea.com"
-      - "traefik.http.routers.localhost3001.rule=Host(`localhost`) && Path(`/`)"
-      - "traefik.http.routers.localhost3001.entrypoints=web"
-      - "traefik.http.services.localhost3001.loadbalancer.server.port=3001"
+      #- "traefik.http.routers.localhost3001.rule=Host(`localhost`) && Path(`/`)"
+      #- "traefik.http.routers.localhost3001.entrypoints=web"
+      #- "traefik.http.services.localhost3001.loadbalancer.server.port=7497"
 
 
 

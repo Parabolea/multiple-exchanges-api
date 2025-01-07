@@ -15,7 +15,8 @@ import os
 from dotenv import load_dotenv
 
 nest_asyncio.apply()
-load_dotenv('../.env')
+path_to_env = '/home/ubuntu/api/.env'
+load_dotenv(path_to_env)
 
 # print("Arguments passed to the script:", sys.argv[1:])
 
@@ -26,7 +27,7 @@ is_demo_bool = bool(is_demo)
 # util.logToConsole('DEBUG')
 ib = IB()
 # 7496 = live, 7497 = paper
-ib.connect('localhost', 7497 if is_demo_bool else 7496, clientId=999)
+ib.connect('172.31.15.205', 7497 if is_demo_bool else 7496, clientId=999)
 
 # List of stock symbols to analyze
 stock_symbols = sys.argv[1:] if len(sys.argv) > 1 else ['AAPL', 'NVDA']
