@@ -17,13 +17,13 @@ services:
       context: .
       dockerfile: Dockerfile
     container_name: node_app
-#    ports:
-#      - "7496:7496"
     depends_on:
       redis:
         condition: service_healthy
     env_file:
       - .env
+    ports:
+      - "3001:3001"
     networks:
       - traefik
       - redis_network
@@ -39,6 +39,10 @@ services:
       - "traefik.http.routers.app-https.entrypoints=https"
       - "traefik.http.routers.app-https.tls.certresolver=le"
       - "traefik.http.routers.app-https.tls.domains[0].main=dbapi.allview-parabolea.com"
+      - "traefik.http.routers.localhost3001.rule=Host(`localhost`) && Path(`/`)"
+      - "traefik.http.routers.localhost3001.entrypoints=web"
+      - "traefik.http.services.localhost3001.loadbalancer.server.port=3001"
+
 
 
 networks:
