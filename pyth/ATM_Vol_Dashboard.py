@@ -4,15 +4,16 @@ Created on Tue Oct 22 11:37:07 2024
 
 @author: aaron
 """
-import json
-import random
-from ib_insync import *
-import pandas as pd
 import datetime as dt
-import nest_asyncio
-import sys
+import json
+import math
 import os
+import random
+import sys
+
+import nest_asyncio
 from dotenv import load_dotenv
+from ib_insync import *
 
 nest_asyncio.apply()
 path_to_env = '/home/ubuntu/api/.env'
@@ -155,11 +156,27 @@ for symbol in stock_symbols:
         continue
 
 
+def safe_json_dumps(data):
+    """
+    Serializes Python objects to a JSON-formatted string, replacing NaN values with 'NaN' (string).
+    """
+    def replace_nan(obj):
+        if isinstance(obj, list):
+            return [replace_nan(item) for item in obj]
+        elif isinstance(obj, dict):
+            return {key: replace_nan(value) for key, value in obj.items()}
+        elif isinstance(obj, float) and math.isnan(obj):
+            return 'NaN'
+        else:
+            return obj
+
+    return json.dumps(replace_nan(data))
+
 # Create a DataFrame and sort by implied volatility
 # atm_vol_df = pd.DataFrame(atm_vol_data)
 
 # Display the sorted DataFrame
-print(json.dumps(atm_vol_data))
+print(safe_json_dumps(atm_vol_data))
 
 # Disconnect from IB
 ib.disconnect()
