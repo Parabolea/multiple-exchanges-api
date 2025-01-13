@@ -6,6 +6,8 @@ import {PythonShell} from 'python-shell';
 import {convertToJsonObject} from "./src/lib/utils.js";
 import * as path from "node:path";
 import dotenv from "dotenv"
+import http from "http";
+import { WebSocketServer } from 'ws'
 
 dotenv.config()
 
@@ -20,6 +22,36 @@ const CACHE_EXPIRY = 900;
 
 const app = express();
 const PORT = process.env.PORT || 8080
+
+const server = http.createServer(app);
+
+const wss = new WebSocketServer({ server, path: '/vol-scanner' });
+wss.on('connection', (socket) => {
+    console.log('WebSocket connection started');
+
+    // Handle incoming messages
+    socket.on('message', async (message) => {
+        console.log('Received message', message.toString());
+        if (message.toString() === 'scan') {
+            console.log('scan event triggered, now running!')
+            const storedTickers = await redis.get('vol-scanner/stock-tickers');
+            const arrayedStoredTickers = JSON.parse(storedTickers)
+
+            const pyCall = new PythonShell('./pyth/ATM_Vol_Dashboard.py', {
+                args: arrayedStoredTickers,
+                mode: 'json',
+                pythonOptions: ['-u']
+            })
+            pyCall.on('message', async (message) => {
+                const parsedMessage = typeof message === 'object' ? JSON.stringify(message) : message;
+                console.log('Parsed message:', parsedMessage);
+
+                // Send the serialized message to the client
+                socket.send(parsedMessage);
+            })
+        }
+    });
+});
 
 // Initialize Redis client
 const redis = Redis.createClient(process.env.REDIS_PORT || 6379, process.env.REDIS_HOST || 'localhost', {
@@ -38,7 +70,7 @@ const DEFAULT_TICKERS = [
     'NFLX', 'TMUS', 'AMD', 'PEP', 'LIN', 'CSCO', 'ADBE', 'QCOM', 'TXN', 'ISRG',
     'COIN', 'MSTR', 'YINN', 'USO', 'GDX', 'ARM', 'MU', 'TSM', 'JPM', 'UNH',
     'XOM', 'V', 'MA', 'HD', 'PG', 'JNJ', 'ABBV', 'CRM',
-    'GOOGL',  'LLY', 'WMT', 'BAC', 'ORCL', 'CVX', 'WFC', 'MRK', 'KO',
+    'GOOGL', 'LLY', 'WMT', 'BAC', 'ORCL', 'CVX', 'WFC', 'MRK', 'KO',
     'ACN', 'NOW', 'DIS', 'MCD', 'IBM', 'PM', 'ABT', 'TMO', 'GE', 'CAT', 'GS',
     'VZ', 'INTU', 'BKNG', 'AXP', 'SPGI', 'CMCSA', 'MS', 'T', 'NEE', 'RTX',
     'DHR', 'LOW', 'PGR', 'UBER', 'AMAT', 'HON', 'AMGN', 'ETN', 'UNP', 'PFE',
@@ -84,7 +116,7 @@ app.get('/deribit', async (req, res) => {
 
     try {
         if (DEMO) {
-            console.info('app is in demo mode, will now return mock data')
+            console.info('Successfully returned mock data for deribit endpoint')
             return res.json({
                 "status": 200,
                 "statusText": "OK",
@@ -275,22 +307,27 @@ app.get('/vol-scanner/scan', async (req, res) => {
         const storedTickers = await redis.get('vol-scanner/stock-tickers');
         const arrayedStoredTickers = JSON.parse(storedTickers)
         // const response = (await PythonShell.run('./pyth/ATM_Vol_Dashboard.py', { args: arrayedStoredTickers, mode: 'json' }))[0]
-        const response = (await PythonShell.run('./pyth/ATM_Vol_Dashboard.py', {
-                args: arrayedStoredTickers,
-                mode: 'json'
-            }))[0]
-        console.log(`Tickers successfully scanned: ${JSON.stringify(response)}`)
-        await redis.set('vol-scanner/scanned', JSON.stringify(response))
+        const pyCall = new PythonShell('./pyth/ATM_Vol_Dashboard.py', {
+            args: arrayedStoredTickers,
+            mode: 'json',
+            pythonOptions: ['-u']
+        })
+        await pyCall.on('message', async (message) => {
+            console.log('Received message', message)
+        })
+        // const response = (await )[0]
+        // console.log(`Tickers successfully scanned: ${JSON.stringify(response)}`)
+        // await redis.set('vol-scanner/scanned', JSON.stringify(response))
         // await sleep(3000)
         // const mockResponse = arrayedStoredTickers.map(ticker => ({
         //     symbol: ticker,
         //     impliedVolatility: getRandomNumber()
         // }))
-        res.status
-        (200).json({
-            message: 'success',
-            data: response
-        })
+        // res.status
+        // (200).json({
+        //     message: 'success',
+        //     data: response
+        // })
         // res.status(200).json(response)
     } catch (e) {
         res.status(500).json({error: e instanceof Error ? e.message : e});
@@ -298,7 +335,7 @@ app.get('/vol-scanner/scan', async (req, res) => {
 })
 
 initializeStockTickers().then(() => {
-    app.listen(PORT, () => {
+    server.listen(PORT, () => {
         console.log(`Server is running on http://localhost:${PORT}`);
         console.log('Checking env variables on docker and here: ', {
             port: process.env.PORT,

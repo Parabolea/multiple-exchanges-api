@@ -10,11 +10,11 @@ import math
 import os
 import random
 import sys
-
 import nest_asyncio
 from dotenv import load_dotenv
 from ib_insync import *
 
+sys.stdout.reconfigure(line_buffering=True)
 nest_asyncio.apply()
 path_to_env = '/home/ubuntu/api/.env'
 load_dotenv(path_to_env)
@@ -35,6 +35,23 @@ stock_symbols = sys.argv[1:] if len(sys.argv) > 1 else ['AAPL', 'NVDA']
 
 # List to store the ATM implied volatilities
 atm_vol_data = []
+
+def safe_json_dumps(data):
+    """
+    Serializes Python objects to a JSON-formatted string, replacing NaN values with 'NaN' (string).
+    """
+    def replace_nan(obj):
+        if isinstance(obj, list):
+            return [replace_nan(item) for item in obj]
+        elif isinstance(obj, dict):
+            return {key: replace_nan(value) for key, value in obj.items()}
+        elif isinstance(obj, float) and math.isnan(obj):
+            return 0
+        else:
+            return obj
+
+    return json.dumps(replace_nan(data))
+
 
 def is_expiring_this_coming_friday(exp):
     """
@@ -134,7 +151,7 @@ for symbol in stock_symbols:
             # Convert implied volatility to percentage
             imp_vol_percent = imp_vol * 100
             implied_vol_data = get_random_number() if is_demo_bool else imp_vol_percent
-            atm_vol_data.append({"symbol": symbol, "impliedVolatility": implied_vol_data})
+            print(safe_json_dumps({"symbol": symbol, "impliedVolatility": implied_vol_data}))
         elif put_options:
             # Take the first suitable ATM call option
             option_contract, option_ticker = put_options[-1]
@@ -146,7 +163,7 @@ for symbol in stock_symbols:
             imp_vol_percent = imp_vol * 100
             implied_vol_data = get_random_number() if is_demo_bool else imp_vol_percent
             # print(f"{symbol}: {imp_vol_percent}")
-            atm_vol_data.append({"symbol": symbol, "impliedVolatility": implied_vol_data})
+            print(safe_json_dumps({"symbol": symbol, "impliedVolatility": implied_vol_data}))
         else:
             # print(f"No suitable ATM call options found for {symbol}. Skipping.")
             continue
@@ -156,27 +173,11 @@ for symbol in stock_symbols:
         continue
 
 
-def safe_json_dumps(data):
-    """
-    Serializes Python objects to a JSON-formatted string, replacing NaN values with 'NaN' (string).
-    """
-    def replace_nan(obj):
-        if isinstance(obj, list):
-            return [replace_nan(item) for item in obj]
-        elif isinstance(obj, dict):
-            return {key: replace_nan(value) for key, value in obj.items()}
-        elif isinstance(obj, float) and math.isnan(obj):
-            return 'NaN'
-        else:
-            return obj
-
-    return json.dumps(replace_nan(data))
-
 # Create a DataFrame and sort by implied volatility
 # atm_vol_df = pd.DataFrame(atm_vol_data)
 
 # Display the sorted DataFrame
-print(safe_json_dumps(atm_vol_data))
+# print(safe_json_dumps(atm_vol_data))
 
 # Disconnect from IB
 ib.disconnect()
