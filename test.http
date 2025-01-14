@@ -1,12 +1,20 @@
-### GET request to example server
+### GET request to alpha vantage api key
+GET https://www.alphavantage.co/query?function=TIME_SERIES_INTRADAY&symbol=IBM&interval=1min&apikey=OWQ3ON1NEEOTGTD5
+Content-Type: application/json
+
+### GET request to fetch the list of tickers
+GET https://dbapi.allview-parabolea.com/vol-scanner/tickers
+Content-Type: application/json
+
+### GET request to fetch the list of tickers
 GET http://localhost:8080/vol-scanner/tickers
 Content-Type: application/json
 
-### GET request to example server
+### GET request scan the list of tickers and get IV data
 GET http://localhost:8080/vol-scanner/scan
 Content-Type: application/json
 
-### GET request to example server
+### POST request to add a ticker
 POST http://localhost:8080/vol-scanner/add-ticker
 Content-Type: application/json
 
@@ -14,7 +22,23 @@ Content-Type: application/json
   "ticker": "TEST"
 }
 
-###### GET request to example server
-DELETE http://localhost:8080/vol-scanner/delete-ticker/AGAINWW
+### POST clear cache
+POST https://dbapi.allview-parabolea.com/vol-scanner/clear-cache
 Content-Type: application/json
+
+{}
+
+### POST clear cache
+POST http://localhost:8080/vol-scanner/clear-cache
+Content-Type: application/json
+
+{}
+
+###### POST request to delete a ticker
+POST http://localhost:8080/vol-scanner/delete-ticker
+Content-Type: application/json
+
+{
+  "ticker": "TEST"
+}
 ###
