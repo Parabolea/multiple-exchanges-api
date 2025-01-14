@@ -33,6 +33,8 @@ wss.on('connection', (socket) => {
     socket.on('message', async (message) => {
         console.log('Received message', message.toString());
         if (message.toString() === 'scan') {
+            // initialize a local variable
+            let localData = []
             console.log('scan event triggered, now running!')
             const storedTickers = await redis.get('vol-scanner/stock-tickers');
             const arrayedStoredTickers = JSON.parse(storedTickers)
@@ -44,8 +46,16 @@ wss.on('connection', (socket) => {
             })
             pyCall.on('message', async (message) => {
                 const parsedMessage = typeof message === 'object' ? JSON.stringify(message) : message;
+                if (parsedMessage.includes('end_of_scan')) {
+                    console.log('End of scan, stopping now')
+                    // save
+                    socket.send('end_of_scan')
+                    return
+                }
                 console.log('Parsed message:', parsedMessage);
-
+                // Append the parsed message to the local variable
+                localData.push(JSON.parse(parsedMessage));
+                await redis.set('vol-scanner/scanned', JSON.stringify(localData));
                 // Send the serialized message to the client
                 socket.send(parsedMessage);
             })
@@ -330,6 +340,21 @@ app.get('/vol-scanner/scan', async (req, res) => {
         // })
         // res.status(200).json(response)
     } catch (e) {
+        res.status(500).json({error: e instanceof Error ? e.message : e});
+    }
+})
+
+app.get('/vol-scanner/scanned', async (req, res) => {
+    try {
+        const scanned = await redis.get('vol-scanner/scanned')
+        if (scanned) {
+            return res.status(200).json({
+                data: JSON.parse(scanned)
+            })
+        }
+        else return res.status(200).json({ data: [] })
+    }
+    catch (e) {
         res.status(500).json({error: e instanceof Error ? e.message : e});
     }
 })

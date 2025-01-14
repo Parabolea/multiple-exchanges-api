@@ -22,6 +22,12 @@ Content-Type: application/json
   "ticker": "TEST"
 }
 
+### GET request to get the stored scanned on redis if there is any
+GET http://localhost:8080/vol-scanner/scanned
+Content-Type: application/json
+
+{}
+
 ### POST clear cache
 POST https://dbapi.allview-parabolea.com/vol-scanner/clear-cache
 Content-Type: application/json

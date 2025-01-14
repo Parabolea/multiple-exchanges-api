@@ -169,6 +169,9 @@ for symbol in stock_symbols:
             # print(f"No suitable ATM call options found for {symbol}. Skipping.")
             continue
 
+        if symbol == stock_symbols[-1]:
+            print(safe_json_dumps({ "message": "end_of_scan" }))
+
     except Exception as e:
         print(f"An error occurred for {symbol}: {e}")
         continue
