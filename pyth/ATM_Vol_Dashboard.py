@@ -14,6 +14,8 @@ import nest_asyncio
 from dotenv import load_dotenv
 from ib_insync import *
 
+from utils import safe_json_dumps
+
 sys.stdout.reconfigure(line_buffering=True)
 nest_asyncio.apply()
 path_to_env = '/home/ubuntu/api/.env'
@@ -36,23 +38,6 @@ stock_symbols = sys.argv[1:] if len(sys.argv) > 1 else ['AAPL', 'NVDA']
 
 # List to store the ATM implied volatilities
 atm_vol_data = []
-
-def safe_json_dumps(data):
-    """
-    Serializes Python objects to a JSON-formatted string, replacing NaN values with 'NaN' (string).
-    """
-    def replace_nan(obj):
-        if isinstance(obj, list):
-            return [replace_nan(item) for item in obj]
-        elif isinstance(obj, dict):
-            return {key: replace_nan(value) for key, value in obj.items()}
-        elif isinstance(obj, float) and math.isnan(obj):
-            return 0
-        else:
-            return obj
-
-    return json.dumps(replace_nan(data))
-
 
 def is_expiring_this_coming_friday(exp):
     """
