@@ -259,6 +259,7 @@ app.post('/vol-scanner/clear-cache', async (req, res) => {
     try {
         await redis.del('vol-scanner/stock-tickers')
         await redis.del('vol-scanner/scanned')
+        await redis.del('ibkr-portfolio/cached')
         res.status(200).json({
             message: 'Clearing redis cache successful'
         })
@@ -375,7 +376,7 @@ app.get('/ibkr-portfolio/cached', async (req, res) => {
     try {
         const cached = await redis.get('ibkr-portfolio/cached')
         if (cached) return res.status(200).json(JSON.parse(cached))
-        else return {}
+        else return res.status(200).json({})
     }
     catch (e) {
         console.error(e)
