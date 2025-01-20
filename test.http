@@ -34,6 +34,12 @@ Content-Type: application/json
 
 {}
 
+### GET request IBKR Portfolio CACHED
+GET http://localhost:8080/ibkr-portfolio/cached
+Content-Type: application/json
+
+{}
+
 ### POST clear cache
 POST https://dbapi.allview-parabolea.com/vol-scanner/clear-cache
 Content-Type: application/json

@@ -362,6 +362,7 @@ app.get('/vol-scanner/scanned', async (req, res) => {
 app.get('/ibkr-portfolio', async (req, res) => {
     try {
         const response = await (await PythonShell.run('./pyth/IBKR_UIDisplay.py'))[0]
+        await redis.set('ibkr-portfolio/cached', response)
         return res.status(200).json(JSON.parse(response))
     }
     catch (e) {
@@ -369,6 +370,19 @@ app.get('/ibkr-portfolio', async (req, res) => {
         return res.status(500).json({error: e instanceof Error ? e.message : e});
     }
 })
+
+app.get('/ibkr-portfolio/cached', async (req, res) => {
+    try {
+        const cached = await redis.get('ibkr-portfolio/cached')
+        if (cached) return res.status(200).json(JSON.parse(cached))
+        else return {}
+    }
+    catch (e) {
+        console.error(e)
+        return res.status(500).json({error: e instanceof Error ? e.message : e});
+    }
+})
+
 
 initializeStockTickers().then(() => {
     server.listen(PORT, () => {
