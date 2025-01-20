@@ -359,6 +359,17 @@ app.get('/vol-scanner/scanned', async (req, res) => {
     }
 })
 
+app.get('/ibkr-portfolio', async (req, res) => {
+    try {
+        const response = await (await PythonShell.run('./pyth/IBKR_UIDisplay.py'))[0]
+        return res.status(200).json(JSON.parse(response))
+    }
+    catch (e) {
+        console.error(e)
+        return res.status(500).json({error: e instanceof Error ? e.message : e});
+    }
+})
+
 initializeStockTickers().then(() => {
     server.listen(PORT, () => {
         console.log(`Server is running on http://localhost:${PORT}`);
