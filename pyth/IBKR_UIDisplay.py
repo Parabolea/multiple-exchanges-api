@@ -222,7 +222,8 @@ class UIBaseIBKR:
         
 # Instantiate and use the strategy
 if __name__ == "__main__":
-    is_demo_bool = True if os.getenv('DEMO').lower() == 'true' else False
+    demo_env = os.getenv('DEMO', 'false').strip().lower()
+    is_demo_bool = True if demo_env in ('1', 'true', 'yes', 'on') else False
     host = os.getenv('IB_IP')
     port = os.getenv('IB_PORT')
     strategy = UIBaseIBKR(host, port, client_id=998, is_demo=is_demo_bool)
