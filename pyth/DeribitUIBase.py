@@ -90,7 +90,6 @@ class DeribitUIBase:
 
         self.msg["method"] = "private/get_account_summary"
         self.msg["params"] = params
-        print('will fetch now')
         summary = self.async_loop(self.priv_api, json.dumps(self.msg))
         return summary
 
