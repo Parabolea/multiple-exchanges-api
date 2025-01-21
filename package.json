@@ -17,7 +17,9 @@
     "dotenv": "^16.4.6",
     "express": "^4.21.1",
     "ioredis": "^5.4.1",
+    "moment-timezone": "^0.5.46",
     "python-shell": "^5.0.0",
+    "winston": "^3.17.0",
     "ws": "^8.18.0"
   },
   "devDependencies": {

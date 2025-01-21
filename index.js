@@ -7,9 +7,26 @@ import {convertToJsonObject} from "./src/lib/utils.js";
 import * as path from "node:path";
 import dotenv from "dotenv"
 import http from "http";
-import { WebSocketServer } from 'ws'
+import {WebSocketServer} from 'ws'
+import winston from "winston";
+import moment from 'moment-timezone'
 
 dotenv.config()
+
+const logger = winston.createLogger({
+    defaultMeta: {
+        service: 'db-api-parabolea'
+    },
+    level: 'info',
+    format: winston.format.combine(
+        winston.format.timestamp({
+            format: () => moment().tz('Asia/Singapore').format('YYYY-MM-DD HH:mm:ss'),
+        })
+    ),
+    transports: [
+        new winston.transports.Console({format: winston.format.simple()}),
+    ]
+})
 
 const __filename = fileURLToPath(import.meta.url);
 
@@ -25,7 +42,7 @@ const PORT = process.env.PORT || 8080
 
 const server = http.createServer(app);
 
-const wss = new WebSocketServer({ server, path: '/vol-scanner' });
+const wss = new WebSocketServer({server, path: '/vol-scanner'});
 wss.on('connection', (socket) => {
     console.log('WebSocket connection started');
 
@@ -75,6 +92,8 @@ redis.on('error', (err) => console.error('Redis connection error:', err));
 app.use(cors());
 app.use(express.json());
 
+const currentTimestamp = Date.now();
+
 const DEFAULT_TICKERS = [
     'AAPL', 'NVDA', 'MSFT', 'AVGO', 'META', 'AMZN', 'TSLA', 'COST', 'GOOG',
     'NFLX', 'TMUS', 'AMD', 'PEP', 'LIN', 'CSCO', 'ADBE', 'QCOM', 'TXN', 'ISRG',
@@ -122,6 +141,7 @@ async function initializeStockTickers() {
 app.use('/graphs', express.static(path.join(__dirname, 'pyth/graphs')));
 
 app.get('/deribit', async (req, res) => {
+    logger.info('TRIGGERED: /deribit')
     const cacheKey = 'python-script-response'; // Unique cache key for the Python script
 
     try {
@@ -245,6 +265,7 @@ app.get('/deribit', async (req, res) => {
 });
 
 app.get('/vol-scanner/tickers', async (req, res) => {
+    logger.info('TRIGGERED: /vol-scanner/tickers')
     let storedTickers = await redis.get('vol-scanner/stock-tickers');
     if (!storedTickers) {
         await initializeStockTickers()
@@ -256,6 +277,7 @@ app.get('/vol-scanner/tickers', async (req, res) => {
 })
 
 app.post('/vol-scanner/clear-cache', async (req, res) => {
+    logger.info('TRIGGERED: /vol-scanner/clear-cache')
     try {
         await redis.del('vol-scanner/stock-tickers')
         await redis.del('vol-scanner/scanned')
@@ -269,6 +291,7 @@ app.post('/vol-scanner/clear-cache', async (req, res) => {
 })
 
 app.post('/vol-scanner/add-ticker', async (req, res) => {
+    logger.info('TRIGGERED: /vol-scanner/add-ticker')
     try {
         const {body} = req
         const storedTickers = await redis.get('vol-scanner/stock-tickers');
@@ -287,6 +310,7 @@ app.post('/vol-scanner/add-ticker', async (req, res) => {
 })
 
 app.post('/vol-scanner/delete-ticker', async (req, res) => {
+    logger.info('TRIGGERED: /vol-scanner/delete-ticker')
     try {
         const {ticker} = req.body
         const storedTickers = await redis.get('vol-scanner/stock-tickers');
@@ -310,6 +334,7 @@ app.post('/vol-scanner/delete-ticker', async (req, res) => {
 })
 
 app.get('/vol-scanner/scan', async (req, res) => {
+    logger.info('TRIGGERED: /vol-scanner/scan')
     console.log('Clearing past scanned data...')
     await redis.del('vol-scanner/scanned')
     console.log('Cleared!')
@@ -346,39 +371,41 @@ app.get('/vol-scanner/scan', async (req, res) => {
 })
 
 app.get('/vol-scanner/scanned', async (req, res) => {
+    logger.info('TRIGGERED: /vol-scanner/scanned')
     try {
         const scanned = await redis.get('vol-scanner/scanned')
         if (scanned) {
             return res.status(200).json({
                 data: JSON.parse(scanned)
             })
-        }
-        else return res.status(200).json({ data: [] })
-    }
-    catch (e) {
+        } else return res.status(200).json({data: []})
+    } catch (e) {
         res.status(500).json({error: e instanceof Error ? e.message : e});
     }
 })
 
 app.get('/ibkr-portfolio', async (req, res) => {
+    logger.info('TRIGGERED: /ibkr-portfolio')
     try {
         const response = await (await PythonShell.run('./pyth/IBKR_UIDisplay.py'))[0]
         await redis.set('ibkr-portfolio/cached', response)
+        console.log(`response stored on redis: ${response}`)
         return res.status(200).json(JSON.parse(response))
-    }
-    catch (e) {
+    } catch (e) {
         console.error(e)
         return res.status(500).json({error: e instanceof Error ? e.message : e});
     }
 })
 
 app.get('/ibkr-portfolio/cached', async (req, res) => {
+    logger.info('TRIGGERED: /ibkr-portfolio/cached')
     try {
         const cached = await redis.get('ibkr-portfolio/cached')
-        if (cached) return res.status(200).json(JSON.parse(cached))
-        else return res.status(200).json({})
-    }
-    catch (e) {
+        if (cached) {
+            console.log(`data existing: ${cached}`)
+            return res.status(200).json(JSON.parse(cached))
+        } else return res.status(200).json({})
+    } catch (e) {
         console.error(e)
         return res.status(500).json({error: e instanceof Error ? e.message : e});
     }
