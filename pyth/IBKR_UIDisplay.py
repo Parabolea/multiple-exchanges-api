@@ -31,7 +31,6 @@ class UIBaseIBKR:
         # Additional initialization as required
 
     def test_positions(self):
-        # print(f"is")
         positions = self.ib.positions()
         account_values = self.ib.accountValues()
         # print(f"positions: {positions}")
@@ -116,11 +115,14 @@ class UIBaseIBKR:
 
                     # Get underlying price
                     underlying_contract = Stock(symbol, 'SMART', 'USD')
+                    # print(f"underlying_contract: {underlying_contract}")
                     self.ib.qualifyContracts(underlying_contract)
                     self.ib.reqMarketDataType(3 if self.is_demo else 1)
                     underlying_market_data = self.ib.reqMktData(underlying_contract, '', False, False)
                     self.ib.sleep(1)
+                    # print(f"underlying_market_data: {underlying_market_data}")
                     underlying_price = underlying_market_data.last or underlying_market_data.close
+                    # print(f"underlying_price: {underlying_price}")
 
                     # Check if the option is ITM
                     if option_type == 'C':
@@ -133,6 +135,7 @@ class UIBaseIBKR:
                     # Calculate the distance from spot to strike (%)
                     # If strike is above underlying_price => distance is positive; below => negative
                     distance_percent = ((strike - underlying_price) / underlying_price) * 100
+                    # print(f"strike: {strike}, underlying_price: {underlying_price}, distance_percent: {distance_percent}")
 
                     # Calculate total notional value
                     total_notional = abs(size) * strike * 100
@@ -182,7 +185,8 @@ class UIBaseIBKR:
                     })
                 else:
                     # For non-option positions (e.g., stocks)
-                    total_notional = abs(size) * mark_price * 100  # Assuming 100 shares per lot
+                    avg_price = position.avgCost
+                    total_notional = abs(size) * mark_price
                     instrument_total_notional += total_notional
                     stocks_count += 1
                     stocks.append({
