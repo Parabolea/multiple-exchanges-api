@@ -389,6 +389,7 @@ app.get('/ibkr-portfolio', async (req, res) => {
     try {
         const response = await (await PythonShell.run('./pyth/IBKR_UIDisplay.py'))[0]
         if (errors.some(error => response.includes(error))) {
+            logger.error(response)
             throw new Error(response)
         }
         await redis.set('ibkr-portfolio/cached', response)
