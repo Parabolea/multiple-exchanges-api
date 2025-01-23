@@ -92,7 +92,7 @@ redis.on('error', (err) => console.error('Redis connection error:', err));
 app.use(cors());
 app.use(express.json());
 
-const errors = ['SyntaxError', 'TypeError', 'ReferenceError', 'TimeoutError', 'ConnectionRefusedError', 'Error'];
+const errors = ['SyntaxError', 'TypeError', 'ReferenceError', 'TimeoutError', 'ConnectionRefusedError', 'Error', 'Failed'];
 
 const DEFAULT_TICKERS = [
     'AAPL', 'NVDA', 'MSFT', 'AVGO', 'META', 'AMZN', 'TSLA', 'COST', 'GOOG',
@@ -386,15 +386,18 @@ app.get('/vol-scanner/scanned', async (req, res) => {
 
 app.get('/ibkr-portfolio', async (req, res) => {
     logger.info('TRIGGERED: /ibkr-portfolio')
+    let response
     try {
         const response = await (await PythonShell.run('./pyth/IBKR_UIDisplay.py'))[0]
         if (errors.some(error => response.includes(error))) {
             logger.error(response)
             throw new Error(response)
         }
-        await redis.set('ibkr-portfolio/cached', response)
-        console.log(`response stored on redis: ${response}`)
-        return res.status(200).json(JSON.parse(response))
+        else {
+            await redis.set('ibkr-portfolio/cached', response)
+            console.log(`response stored on redis: ${response}`)
+            return res.status(200).json(JSON.parse(response))
+        }
     } catch (e) {
         console.error(e)
         return res.status(500).json({error: e instanceof Error ? e.message : e});
