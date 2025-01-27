@@ -113,6 +113,8 @@ class UIBaseIBKR:
                     else:
                         option_type_full = 'Unknown'
 
+                    expiry_date = position.contract.lastTradeDateOrContractMonth
+
                     # Get underlying price
                     underlying_contract = Stock(symbol, 'SMART', 'USD')
                     # print(f"underlying_contract: {underlying_contract}")
@@ -172,6 +174,8 @@ class UIBaseIBKR:
                         "notional": total_notional,
                         "delta": delta,
                         "theta": theta,
+                        "expiry_date": expiry_date,
+                        "current_spot_price": underlying_price
                     })
 
                 elif position.contract.secType == 'FUT':
