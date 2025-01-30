@@ -67,7 +67,9 @@ Content-Type: application/json
 }
 ###
 
-GET http://localhost:8080/testing
+POST http://localhost:8080/force-cache
 Content-Type: application/json
 
-{}
+{
+  "hello": "hi"
+}

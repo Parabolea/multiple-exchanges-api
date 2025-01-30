@@ -418,6 +418,23 @@ app.get('/ibkr-portfolio/cached', async (req, res) => {
     }
 })
 
+app.post('/ibkr-portfolio/force-cache', async (req, res) => {
+    logger.info('TRIGGERED: /ibkr-portfolio/force-cache')
+    try { await redis.set('ibkr-portfolio/cached', JSON.stringify(req.body)) }
+    catch (e) {
+        logger.error(e instanceof Error ? e.message : e);
+    }
+    return res.status(200).json({ message: 'success' })
+})
+
+app.post('/vol-scanner/force-cache', async (req, res) => {
+    logger.info('TRIGGERED: /vol-scanner/force-cache')
+    try { await redis.set('vol-scanner/scanned', JSON.stringify(req.body)) }
+    catch (e) {
+        logger.error(e instanceof Error ? e.message : e);
+    }
+    return res.status(200).json({ message: 'success' })
+})
 
 initializeStockTickers().then(() => {
     server.listen(PORT, () => {
