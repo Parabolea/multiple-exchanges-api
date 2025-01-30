@@ -170,7 +170,7 @@ class UIBaseIBKR:
                         "avg_price": avg_price,
                         "current_price": mark_price,
                         "itm": itm,
-                        "distance": f"{distance_percent:2f}%",
+                        "distance": distance_percent,
                         "notional": total_notional,
                         "delta": delta,
                         "theta": theta,
