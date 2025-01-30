@@ -85,7 +85,7 @@ class UIBaseIBKR:
                 direction = 'BUY' if position.position > 0 else 'SELL'
                 avg_price = position.avgCost / 100
                 instrument = self.ib.qualifyContracts(position.contract)[0]
-                self.ib.reqMarketDataType(3 if self.is_demo else 1)
+                self.ib.reqMarketDataType(3 if self.is_demo else 2)
                 market_data = self.ib.reqMktData(instrument, '106', False, False)
                 self.ib.sleep(1)
                 mark_price = market_data.close
@@ -119,7 +119,7 @@ class UIBaseIBKR:
                     underlying_contract = Stock(symbol, 'SMART', 'USD')
                     # print(f"underlying_contract: {underlying_contract}")
                     self.ib.qualifyContracts(underlying_contract)
-                    self.ib.reqMarketDataType(3 if self.is_demo else 1)
+                    self.ib.reqMarketDataType(3 if self.is_demo else 2)
                     underlying_market_data = self.ib.reqMktData(underlying_contract, '', False, False)
                     self.ib.sleep(1)
                     # print(f"underlying_market_data: {underlying_market_data}")
