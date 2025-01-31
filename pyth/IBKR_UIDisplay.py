@@ -186,6 +186,7 @@ class UIBaseIBKR:
                         'symbol': position.contract.symbol,
                         'position': position.position,
                         'avg_cost': position.avgCost / 5,
+                        'estimated_liquidation_price': ((equity - margin ) / 2 / 5 /22 ) + position.avgCost
                     })
                 else:
                     # For non-option positions (e.g., stocks)
