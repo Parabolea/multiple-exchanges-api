@@ -235,7 +235,7 @@ if __name__ == "__main__":
     is_demo_bool = True if demo_env in ('1', 'true', 'yes', 'on') else False
     host = os.getenv('IB_IP')
     port = os.getenv('IB_PORT')
-    strategy = UIBaseIBKR(host, port, client_id=997, is_demo=is_demo_bool)
+    strategy = UIBaseIBKR(host, port, client_id=998, is_demo=is_demo_bool)
     # Run the strategy or call its methods
     # For example:
     strategy.manage_port()
