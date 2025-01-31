@@ -185,7 +185,7 @@ class UIBaseIBKR:
                     futures.append({
                         'symbol': position.contract.symbol,
                         'position': position.position,
-                        'avg_cost': position.avgCost,
+                        'avg_cost': position.avgCost / 5,
                     })
                 else:
                     # For non-option positions (e.g., stocks)
