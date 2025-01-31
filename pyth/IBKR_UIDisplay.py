@@ -6,6 +6,7 @@ Created on Tue Dec 12 14:42:01 2023
 
 @author: aaronng
 """
+import json
 import os
 from ib_insync import *
 import nest_asyncio
@@ -186,7 +187,7 @@ class UIBaseIBKR:
                         'symbol': position.contract.symbol,
                         'position': position.position,
                         'avg_cost': position.avgCost / 5,
-                        'estimated_liquidation_price': ((equity - margin ) / 2 / 5 / position.size ) + position.avgCost
+                        'estimated_liquidation_price': ((equity - margin ) / 2 / 5 / size ) + position.avgCost
                     })
                 else:
                     # For non-option positions (e.g., stocks)
