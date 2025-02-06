@@ -282,6 +282,7 @@ app.post('/vol-scanner/clear-cache', async (req, res) => {
         await redis.del('vol-scanner/stock-tickers')
         await redis.del('vol-scanner/scanned')
         await redis.del('ibkr-portfolio/cached')
+        await redis.del('calendar_events')
         res.status(200).json({
             message: 'Clearing redis cache successful'
         })
@@ -436,6 +437,76 @@ app.post('/vol-scanner/force-cache', async (req, res) => {
     return res.status(200).json({ message: 'success' })
 })
 
+// interface will be { Date: string, Date: string }
+app.get('/earnings-calendar/points', async (req, res) => {
+    const { startDate, endDate } = req.query;
+
+    const startTimestamp = new Date(startDate).getTime();
+    const endTimestamp = new Date(endDate).getTime();
+
+    if (isNaN(startTimestamp) || isNaN(endTimestamp)) {
+        return res.status(400).json({ error: "Invalid date format" });
+    }
+
+    try {
+        // Get event IDs within the date range
+        const eventIds = await redis.zrangebyscore("calendar_events", startTimestamp, endTimestamp);
+
+        if (eventIds.length === 0) {
+            return res.json({ events: [] }); // No events found
+        }
+
+        // Fetch event details for each event ID
+        const eventDetails = await Promise.all(
+            eventIds.map(async (id) => {
+                const details = await redis.hgetall(id);
+                return { id, ...details };
+            })
+        );
+
+        res.json(eventDetails);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+app.post('/earnings-calendar/add/point', async (req, res) => {
+    const events = await redis.zrangebyscore("calendar_events", "-inf", "+inf", "WITHSCORES");
+    console.log({ events });
+
+    const { event, startDate, endDate } = req.body;
+    if (!event || !startDate || !endDate) {
+        return res.status(400).json({ error: "One of the required fields is missing" });
+    }
+
+    // Convert startDate to a timestamp for sorting
+    const startTimestamp = new Date(startDate).getTime();
+    const endTimestamp = new Date(endDate).getTime();
+
+    if (isNaN(startTimestamp) || isNaN(endTimestamp)) {
+        return res.status(400).json({ error: "Invalid date format" });
+    }
+
+    // Generate a unique event ID
+    const eventId = `event:${startTimestamp}-${Math.random().toString(36).substring(2, 8)}`;
+
+    try {
+        // Store event in Sorted Set (using startDate as score)
+        await redis.zadd("calendar_events", startTimestamp, eventId);
+
+        // Store event details in Redis Hash
+        await redis.hset(eventId, {
+            event,
+            startDate,
+            endDate
+        });
+
+        res.json({ message: "Event added successfully!", id: eventId });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+;
 initializeStockTickers().then(() => {
     server.listen(PORT, () => {
         console.log(`Server is running on http://localhost:${PORT}`);
