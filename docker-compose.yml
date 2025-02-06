@@ -50,6 +50,9 @@ services:
 
 
 
+volumes:
+  redis_data:
+
 networks:
   traefik:
     external: true
