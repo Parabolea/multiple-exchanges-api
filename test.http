@@ -795,3 +795,18 @@ GET {{host}}/earnings-calendar/points?startDate=2024-02-01T00:00:00Z&endDate=202
 Content-Type: application/json
 
 {}
+
+###
+POST {{host}}/earnings-calendar/points/new
+Content-Type: application/json
+
+{
+  "tickers": "",
+  "range": "month"
+}
+
+###
+GET {{host}}/earnings-calendar/points/cached
+Content-Type: application/json
+
+{}

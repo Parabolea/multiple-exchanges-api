@@ -393,8 +393,7 @@ app.get('/ibkr-portfolio', async (req, res) => {
         if (errors.some(error => response.includes(error))) {
             logger.error(response)
             throw new Error(response)
-        }
-        else {
+        } else {
             await redis.set('ibkr-portfolio/cached', response)
             console.log(`response stored on redis: ${response}`)
             return res.status(200).json(JSON.parse(response))
@@ -421,31 +420,33 @@ app.get('/ibkr-portfolio/cached', async (req, res) => {
 
 app.post('/ibkr-portfolio/force-cache', async (req, res) => {
     logger.info('TRIGGERED: /ibkr-portfolio/force-cache')
-    try { await redis.set('ibkr-portfolio/cached', JSON.stringify(req.body)) }
-    catch (e) {
+    try {
+        await redis.set('ibkr-portfolio/cached', JSON.stringify(req.body))
+    } catch (e) {
         logger.error(e instanceof Error ? e.message : e);
     }
-    return res.status(200).json({ message: 'success' })
+    return res.status(200).json({message: 'success'})
 })
 
 app.post('/vol-scanner/force-cache', async (req, res) => {
     logger.info('TRIGGERED: /vol-scanner/force-cache')
-    try { await redis.set('vol-scanner/scanned', JSON.stringify(req.body)) }
-    catch (e) {
+    try {
+        await redis.set('vol-scanner/scanned', JSON.stringify(req.body))
+    } catch (e) {
         logger.error(e instanceof Error ? e.message : e);
     }
-    return res.status(200).json({ message: 'success' })
+    return res.status(200).json({message: 'success'})
 })
 
 // interface will be { Date: string, Date: string }
 app.get('/earnings-calendar/points', async (req, res) => {
-    const { startDate, endDate } = req.query;
+    const {startDate, endDate} = req.query;
 
     const startTimestamp = new Date(startDate).getTime();
     const endTimestamp = new Date(endDate).getTime();
 
     if (isNaN(startTimestamp) || isNaN(endTimestamp)) {
-        return res.status(400).json({ error: "Invalid date format" });
+        return res.status(400).json({error: "Invalid date format"});
     }
 
     try {
@@ -453,30 +454,67 @@ app.get('/earnings-calendar/points', async (req, res) => {
         const eventIds = await redis.zrangebyscore("calendar_events", startTimestamp, endTimestamp);
 
         if (eventIds.length === 0) {
-            return res.json({ events: [] }); // No events found
+            return res.json({events: []}); // No events found
         }
 
         // Fetch event details for each event ID
         const eventDetails = await Promise.all(
             eventIds.map(async (id) => {
                 const details = await redis.hgetall(id);
-                return { id, ...details };
+                return {id, ...details};
             })
         );
 
         res.json(eventDetails);
     } catch (error) {
-        res.status(500).json({ error: error.message });
+        res.status(500).json({error: error.message});
     }
 });
 
+app.get('/earnings-calendar/points/cached', async (req, res) => {
+    const cachedData = await redis.get('earnings-calendar/points')
+    if (!cachedData) return res.status(404).json({error: "No cached data"});
+    return res.status(200).json(JSON.parse(cachedData))
+})
+
+app.post('/earnings-calendar/points/new', async (req, res) => {
+    logger.info('TRIGGERED: /earnings-calendar/points/new')
+
+    const {tickers, range} = req.body;
+    console.log({tickers, range})
+    try {
+        const pyCall = await PythonShell.run('./pyth/Earnings_Cal.py', {
+            args: [
+                JSON.stringify(DEFAULT_TICKERS),
+                range
+            ],
+            mode: 'text',
+            pythonOptions: ['-u'],
+        })
+
+        // pyCall.on("message", message => {
+        //     console.log('shell message: ', message)
+        // })
+        //
+        // pyCall.end((err, code, signal) => {
+        //     if (err) console.error('Python Script Error:', err);
+        //     console.log('Python script finished with exit code:', code);
+        // })
+        await redis.set('earnings-calendar/points', pyCall[0])
+        return res.status(200).json(JSON.parse(pyCall[0]))
+    }
+    catch (error) {
+        res.status(500).json({error: error.message});
+    }
+})
+
 app.post('/earnings-calendar/add/point', async (req, res) => {
     const events = await redis.zrangebyscore("calendar_events", "-inf", "+inf", "WITHSCORES");
-    console.log({ events });
+    console.log({events});
 
-    const { event, startDate, endDate } = req.body;
+    const {event, startDate, endDate} = req.body;
     if (!event || !startDate || !endDate) {
-        return res.status(400).json({ error: "One of the required fields is missing" });
+        return res.status(400).json({error: "One of the required fields is missing"});
     }
 
     // Convert startDate to a timestamp for sorting
@@ -484,7 +522,7 @@ app.post('/earnings-calendar/add/point', async (req, res) => {
     const endTimestamp = new Date(endDate).getTime();
 
     if (isNaN(startTimestamp) || isNaN(endTimestamp)) {
-        return res.status(400).json({ error: "Invalid date format" });
+        return res.status(400).json({error: "Invalid date format"});
     }
 
     // Generate a unique event ID
@@ -501,24 +539,24 @@ app.post('/earnings-calendar/add/point', async (req, res) => {
             endDate
         });
 
-        res.json({ message: "Event added successfully!", id: eventId });
+        res.json({message: "Event added successfully!", id: eventId});
     } catch (error) {
-        res.status(500).json({ error: error.message });
+        res.status(500).json({error: error.message});
     }
 });
 
 app.post('/earnings-calendar/delete/point', async (req, res) => {
-    const { id } = req.body;
+    const {id} = req.body;
 
     if (!id) {
-        return res.status(400).json({ error: "Event ID is required" });
+        return res.status(400).json({error: "Event ID is required"});
     }
 
     try {
         // Check if event exists in Redis
         const eventExists = await redis.exists(id);
         if (!eventExists) {
-            return res.status(404).json({ error: "Event not found" });
+            return res.status(404).json({error: "Event not found"});
         }
 
         // Remove event from Sorted Set
@@ -527,9 +565,9 @@ app.post('/earnings-calendar/delete/point', async (req, res) => {
         // Delete event details from Hash
         await redis.del(id);
 
-        res.json({ message: "Event deleted successfully!" });
+        res.json({message: "Event deleted successfully!"});
     } catch (error) {
-        res.status(500).json({ error: error.message });
+        res.status(500).json({error: error.message});
     }
 });
 
