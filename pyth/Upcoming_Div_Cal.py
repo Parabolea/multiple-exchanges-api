@@ -68,7 +68,7 @@ def yahoo_sourced_divided_data(ticker: str):
         return result
     except Exception as e:
         logging.error(e)
-        sys.exit(1)
+        return None
 
 def get_dividend_data(symbol):
     global current_key_index
