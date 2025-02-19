@@ -283,6 +283,7 @@ app.post('/vol-scanner/clear-cache', async (req, res) => {
         await redis.del('vol-scanner/scanned')
         await redis.del('ibkr-portfolio/cached')
         await redis.del('calendar_events')
+        await redis.del('earnings-calendar/points')
         res.status(200).json({
             message: 'Clearing redis cache successful'
         })
@@ -472,6 +473,8 @@ app.get('/earnings-calendar/points', async (req, res) => {
 });
 
 app.get('/earnings-calendar/points/cached', async (req, res) => {
+    logger.info('TRIGGERED: /earnings-calendar/points/cached')
+
     const cachedData = await redis.get('earnings-calendar/points')
     if (!cachedData) return res.status(404).json({error: "No cached data"});
     return res.status(200).json(JSON.parse(cachedData))
@@ -570,6 +573,61 @@ app.post('/earnings-calendar/delete/point', async (req, res) => {
         res.status(500).json({error: error.message});
     }
 });
+
+app.post('/earnings-calendar/dividends', async (req, res) => {
+    const { tickers } = req.body
+    logger.info('TRIGGERED: /earnings-calendar/dividends')
+    let pythonErrors = ''
+    let pythonResult = ''
+    console.log({ tickers })
+    try {
+        const pyCall = new PythonShell('./pyth/Upcoming_Div_Cal.py', {
+            args: [
+                JSON.stringify(tickers),
+            ],
+            mode: 'text',
+            pythonOptions: ['-u'],
+        })
+        pyCall.on('message', message => {
+            console.log({ message })
+            pythonResult = message
+        })
+
+        pyCall.on('stderr', (postMessage) => {
+            console.log(postMessage)
+            if(postMessage.toLowerCase().includes('error')) {
+                pythonErrors += postMessage
+            }
+        })
+
+        pyCall.on('close', async () => {
+            if (pythonResult && !pythonResult.toLowerCase().includes('error')) {
+                const fixedResult = pythonResult.replace(/'/g, '"')
+                await redis.set('earnings-calendar/dividends', fixedResult)
+                return res.status(200).json(JSON.parse(fixedResult));
+            }
+            else {
+                const shortenedLog = pythonErrors.split(' - ERROR: ')[1]
+                return res.status(500).json({ error: shortenedLog })
+            }
+        })
+        pyCall.on('error', error => {
+            return res.status(500).json({error: error.message});
+        })
+    }
+    catch (error) {
+        return res.status(500).json({error: error.message});
+    }
+})
+
+app.get('/earnings-calendar/dividends/cached', async (req, res) => {
+    const cachedData = await redis.get('earnings-calendar/dividends')
+    if (!cachedData) return res.status(404).json({error: "No cached data"});
+    return res.status(200).json(JSON.parse(cachedData))
+})
+
+app.get('/earings-calendar/market-watch/scraped', async (req, res) => {
+})
 
 initializeStockTickers().then(() => {
     server.listen(PORT, () => {

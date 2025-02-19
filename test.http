@@ -810,3 +810,23 @@ GET {{host}}/earnings-calendar/points/cached
 Content-Type: application/json
 
 {}
+
+### Getting dividends event
+POST {{host}}/earnings-calendar/dividends
+Content-Type: application/json
+
+{
+  "tickers": "[\"AAPL\"]"
+}
+
+### (CACHED) Getting dividends event
+GET {{host}}/earnings-calendar/dividends/cached
+Content-Type: application/json
+
+{}
+
+### test data scraping
+GET {{host}}/earings-calendar/market-watch/scraped
+Content-Type: application/json
+
+{}

@@ -4,11 +4,14 @@ import sys
 import csv
 from enum import Enum
 
+import os
+from dotenv import load_dotenv
 import requests
 from datetime import datetime, timedelta
 from utils import safe_json_dumps
+load_dotenv('../.env')
 
-API_KEY = 'X09L1IWO27O3CPNV'
+API_KEY = os.getenv('ALPHA_VANTAGE_API_KEY')
 
 # print(f"arg: {json.loads(sys.argv[1])}")
 # print(f"second arg: {sys.argv[2]}")
