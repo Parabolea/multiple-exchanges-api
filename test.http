@@ -826,7 +826,13 @@ Content-Type: application/json
 {}
 
 ### test data scraping
-GET {{host}}/earings-calendar/market-watch/scraped
+POST {{host}}/earings-calendar/market-watch/scrape
+Content-Type: application/json
+
+{}
+
+### test data scraping
+GET {{host}}/earnings-calendar/market-watch/cached
 Content-Type: application/json
 
 {}

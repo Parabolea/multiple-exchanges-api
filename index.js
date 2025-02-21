@@ -9,7 +9,10 @@ import dotenv from "dotenv"
 import http from "http";
 import {WebSocketServer} from 'ws'
 import winston from "winston";
-import moment from 'moment-timezone'
+import momentTimezone from 'moment-timezone'
+import * as cheerio from 'cheerio'
+import moment from 'moment'
+import puppeteer from "puppeteer";
 
 dotenv.config()
 
@@ -20,7 +23,7 @@ const logger = winston.createLogger({
     level: 'info',
     format: winston.format.combine(
         winston.format.timestamp({
-            format: () => moment().tz('Asia/Singapore').format('YYYY-MM-DD HH:mm:ss'),
+            format: () => momentTimezone().tz('Asia/Singapore').format('YYYY-MM-DD HH:mm:ss'),
         })
     ),
     transports: [
@@ -505,8 +508,7 @@ app.post('/earnings-calendar/points/new', async (req, res) => {
         // })
         await redis.set('earnings-calendar/points', pyCall[0])
         return res.status(200).json(JSON.parse(pyCall[0]))
-    }
-    catch (error) {
+    } catch (error) {
         res.status(500).json({error: error.message});
     }
 })
@@ -575,11 +577,11 @@ app.post('/earnings-calendar/delete/point', async (req, res) => {
 });
 
 app.post('/earnings-calendar/dividends', async (req, res) => {
-    const { tickers } = req.body
+    const {tickers} = req.body
     logger.info('TRIGGERED: /earnings-calendar/dividends')
     let pythonErrors = ''
     let pythonResult = ''
-    console.log({ tickers })
+    console.log({tickers})
     try {
         const pyCall = new PythonShell('./pyth/Upcoming_Div_Cal.py', {
             args: [
@@ -589,13 +591,13 @@ app.post('/earnings-calendar/dividends', async (req, res) => {
             pythonOptions: ['-u'],
         })
         pyCall.on('message', message => {
-            console.log({ message })
+            console.log({message})
             pythonResult = message
         })
 
         pyCall.on('stderr', (postMessage) => {
             console.log(postMessage)
-            if(postMessage.toLowerCase().includes('error')) {
+            if (postMessage.toLowerCase().includes('error')) {
                 pythonErrors += postMessage
             }
         })
@@ -605,28 +607,92 @@ app.post('/earnings-calendar/dividends', async (req, res) => {
                 const fixedResult = pythonResult.replace(/'/g, '"')
                 await redis.set('earnings-calendar/dividends', fixedResult)
                 return res.status(200).json(JSON.parse(fixedResult));
-            }
-            else {
+            } else {
                 const shortenedLog = pythonErrors.split(' - ERROR: ')[1]
-                return res.status(500).json({ error: shortenedLog })
+                return res.status(500).json({error: shortenedLog})
             }
         })
         pyCall.on('error', error => {
             return res.status(500).json({error: error.message});
         })
-    }
-    catch (error) {
+    } catch (error) {
         return res.status(500).json({error: error.message});
     }
 })
 
 app.get('/earnings-calendar/dividends/cached', async (req, res) => {
+    logger.info('TRIGGERED: /earnings-calendar/dividends/cached')
     const cachedData = await redis.get('earnings-calendar/dividends')
     if (!cachedData) return res.status(404).json({error: "No cached data"});
     return res.status(200).json(JSON.parse(cachedData))
 })
 
-app.get('/earings-calendar/market-watch/scraped', async (req, res) => {
+
+const days = ['MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY', 'SUNDAY']
+
+app.post('/earings-calendar/market-watch/scrape', async (req, res) => {
+    logger.info('TRIGGERED: /earnings-calendar/market-watch/scrape')
+    const url = 'https://www.marketwatch.com/economy-politics/calendar?mod=economy-politics'
+    let usEconomicCalendarData = {}
+
+    try {
+        const browser = await puppeteer.launch({
+            headless: true,
+            args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage'],
+        })
+        console.log('puppeteer launced')
+        const page = await browser.newPage();
+        console.log('new page opened')
+
+        await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36');
+
+        await page.goto(url, { waitUntil: 'domcontentloaded' });
+        console.log('went to the page')
+        const content = await page.content();
+        await browser.close();
+
+        const $ = cheerio.load(content)
+
+        let currentDateIndex = null
+        $('div.element--tableblock table tbody tr').each((i, element) => {
+
+            $(element).find('td').each((index, el) => {
+
+                const textContent = $(el).text().trim()
+
+                if (index === 0 && textContent !== '' && days.find(day => textContent.toUpperCase().includes(day))) {
+                    usEconomicCalendarData[moment(textContent, 'dddd, MMM. D').toISOString()] = []
+                    typeof currentDateIndex !== 'number' ? currentDateIndex = 0 : currentDateIndex += 1
+                }
+
+                if (index === 1 && textContent !== '') {
+                    const keys = Object.keys(usEconomicCalendarData)
+                    const keyToUpdate = keys[currentDateIndex]
+                    usEconomicCalendarData[keyToUpdate] = [...(usEconomicCalendarData[keyToUpdate] ? usEconomicCalendarData[keyToUpdate] : []), textContent];
+                }
+            })
+        })
+
+        await redis.set('earnings-calendar/market-watch', JSON.stringify(usEconomicCalendarData))
+        return res.status(200).json(usEconomicCalendarData)
+    } catch (e) {
+        console.error(e)
+    }
+})
+
+app.get('/earnings-calendar/market-watch/cached', async (req, res) => {
+    logger.info('TRIGGERED: /earnings-calendar/market-watch/cached')
+    try {
+        const cachedData = await redis.get('earnings-calendar/market-watch')
+        if (!cachedData) {
+            return res.status(404).json({error: "No cached data"});
+        }
+        return res.status(200).json(JSON.parse(cachedData))
+    }
+    catch (e) {
+        console.error(e)
+        return res.status(500).json({error: e})
+    }
 })
 
 initializeStockTickers().then(() => {
