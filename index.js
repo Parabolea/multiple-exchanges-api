@@ -699,7 +699,7 @@ app.get('/earnings-calendar/market-watch/cached', async (req, res) => {
 })
 
 initializeStockTickers().then(() => {
-    server.listen(PORT, "0.0.0.0", () => {
+    server.listen(PORT, () => {
         console.log(`Server is running on http://localhost:${PORT}`);
         console.log('Checking env variables on docker and here: ', {
             port: process.env.PORT,
