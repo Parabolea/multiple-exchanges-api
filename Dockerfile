@@ -21,10 +21,43 @@ RUN apk add --no-cache \
     libxi \
     libxcursor \
     libxdamage \
-    cairo \
     pango \
     glib \
-    alsa-lib
+    alsa-lib \
+    dbus dbus-x11 \
+    wget \
+    # Additional dependencies for Puppeteer
+    gconf \
+    alsa-lib \
+    atk \
+    cairo \
+    cups \
+    dbus \
+    expat \
+    fontconfig \
+    gdk-pixbuf \
+    glib \
+    gtk+3.0 \
+    nspr \
+    pango \
+    xcb-util \
+    libx11 \
+    libx11-xcb \
+    libxcb \
+    libxcomposite \
+    libxcursor \
+    libxdamage \
+    libxext \
+    libxfixes \
+    libxi \
+    libxrandr \
+    libxrender \
+    libxss \
+    libxtst \
+    libnss \
+    lsb-release \
+    xdg-utils \
+    fonts-liberation
 
 # Set environment variables for Puppeteer
 ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser
