@@ -630,7 +630,7 @@ app.get('/earnings-calendar/dividends/cached', async (req, res) => {
 
 const days = ['MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY', 'SUNDAY']
 
-app.post('/earings-calendar/market-watch/scrape', async (req, res) => {
+app.post('/earnings-calendar/market-watch/scrape', async (req, res) => {
     logger.info('TRIGGERED: /earnings-calendar/market-watch/scrape')
     const url = 'https://www.marketwatch.com/economy-politics/calendar?mod=economy-politics'
     let usEconomicCalendarData = {}
@@ -640,21 +640,8 @@ app.post('/earings-calendar/market-watch/scrape', async (req, res) => {
     try {
         const browser = await puppeteer.launch({
             headless: true,
-            args: [
-                "--no-sandbox",
-                "--disable-setuid-sandbox",
-                "--disable-dev-shm-usage",
-                "--disable-gpu",
-                "--no-zygote",
-                "--disable-software-rasterizer",
-                "--disable-background-networking",
-                "--disable-default-apps",
-                "--disable-translate",
-                "--disable-sync",
-                "--disable-extensions",
-            ],
-            executablePath: '/usr/bin/chromium-browser', // Ensures Puppeteer finds Chromium,
-            dumpio: true
+            executablePath: '/usr/bin/chromium-browser',  // Correct path
+            args: ['--no-sandbox', '--headless', '--disable-gpu', '--disable-dev-shm-usage'],
         });
         console.log('puppeteer launched')
         const page = await browser.newPage();
@@ -712,7 +699,7 @@ app.get('/earnings-calendar/market-watch/cached', async (req, res) => {
 })
 
 initializeStockTickers().then(() => {
-    server.listen(PORT, () => {
+    server.listen(PORT, "0.0.0.0", () => {
         console.log(`Server is running on http://localhost:${PORT}`);
         console.log('Checking env variables on docker and here: ', {
             port: process.env.PORT,

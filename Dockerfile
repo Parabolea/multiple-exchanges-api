@@ -1,44 +1,32 @@
 FROM node:18-alpine
 
-RUN apk add --no-cache \
-  chromium \
-  nss \
-  freetype \
-  harfbuzz \
-  ca-certificates \
-  ttf-freefont \
-  dbus \
-  udev \
-  libx11 \
-  libxcomposite \
-  libxdamage \
-  libxtst \
-  libnss \
-  alsa-lib \
-  at-spi2-core \
-  mesa-dri-gallium \
-  xvfb
+WORKDIR /usr/app
 
-# Set environment variables for Puppeteer
-ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser \
-    PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true \
-    PUPPETEER_DISABLE_HEADLESS_WARNING=true
+ENV CHROME_BIN="/usr/bin/chromium-browser" \
+    PUPPETEER_SKIP_CHROMIUM_DOWNLOAD="true"
+RUN set -x \
+    && apk update \
+    && apk upgrade \
+    && apk add --no-cache \
+    udev \
+    ttf-freefont \
+    chromium \
+    && npm cache clean --force
 
-WORKDIR /app
 
-RUN apk add --no-cache python3 py3-pip
+# Install Python & dependencies
+RUN apk add --no-cache python3 py3-pip dbus
 
 COPY requirements.txt ./
 RUN pip3 install --no-cache-dir -r requirements.txt --break-system-packages
 
-#RUN python -m venv my-venv
-#
-#RUN my-venv/bin/pip install websockets asyncio nest_asyncio
-
 COPY package.json yarn.lock ./
 
-RUN yarn install
+RUN yarn install --frozen-lockfile
 
 COPY . .
 
+# Start the dbus service before running the application
 CMD ["yarn", "start"]
+
+EXPOSE 8080

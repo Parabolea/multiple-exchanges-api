@@ -20,6 +20,12 @@ services:
       context: .
       dockerfile: Dockerfile
     container_name: node_app
+    volumes:
+      - /var/run/dbus/system_bus_socket:/var/run/dbus/system_bus_socket
+    environment:
+      - DBUS_SYSTEM_BUS_ADDRESS=unix:path=/var/run/dbus/system_bus_socket
+    security_opt:
+      - apparmor=unconfined
     depends_on:
       redis:
         condition: service_healthy

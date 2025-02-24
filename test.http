@@ -826,7 +826,7 @@ Content-Type: application/json
 {}
 
 ### test data scraping
-POST {{host}}/earings-calendar/market-watch/scrape
+POST {{host}}/earnings-calendar/market-watch/scrape
 Content-Type: application/json
 
 {}
