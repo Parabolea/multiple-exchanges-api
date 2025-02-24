@@ -635,13 +635,15 @@ app.post('/earings-calendar/market-watch/scrape', async (req, res) => {
     const url = 'https://www.marketwatch.com/economy-politics/calendar?mod=economy-politics'
     let usEconomicCalendarData = {}
 
+    console.log({ PUPPETEER_EXECUTABLE_PATH: process.env.PUPPETEER_EXECUTABLE_PATH })
+
     try {
         const browser = await puppeteer.launch({
             executablePath: process.env.PUPPETEER_EXECUTABLE_PATH,
             headless: true,
             args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage'],
         })
-        console.log('puppeteer launced')
+        console.log('puppeteer launched')
         const page = await browser.newPage();
         console.log('new page opened')
 
