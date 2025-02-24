@@ -13,10 +13,23 @@ RUN apk add --no-cache \
     font-noto-emoji \
     libstdc++ \
     chromium-chromedriver \
-    bash
+    bash \
+    libx11 \
+    libxcomposite \
+    libxrandr \
+    libxfixes \
+    libxi \
+    libxcursor \
+    libxdamage \
+    libcairo \
+    pango \
+    glib \
+    alsa-lib \
+    atk
 
-# Set up Puppeteer to use the installed Chromium
+# Set environment variables for Puppeteer
 ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser
+ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
 
 WORKDIR /app
 

@@ -639,18 +639,16 @@ app.post('/earings-calendar/market-watch/scrape', async (req, res) => {
 
     try {
         const browser = await puppeteer.launch({
-            executablePath: process.env.PUPPETEER_EXECUTABLE_PATH,
-            headless: true,
+            headless: 'new', // or true for older versions
             args: [
-                "--no-sandbox",
-                "--disable-setuid-sandbox",
-                "--disable-dev-shm-usage", // Prevents /dev/shm issues
-                "--disable-gpu",
-                "--remote-debugging-port=9222", // Helps debug
+                '--no-sandbox',
+                '--disable-setuid-sandbox',
+                '--disable-gpu',
+                '--disable-software-rasterizer'
             ],
             pipe: true,
             dumpio: true
-        })
+        });
         console.log('puppeteer launched')
         const page = await browser.newPage();
         console.log('new page opened')
