@@ -27,6 +27,7 @@
     "ws": "^8.18.0"
   },
   "devDependencies": {
+    "@types/puppeteer": "1.10.0",
     "nodemon": "^3.1.7"
   }
 }

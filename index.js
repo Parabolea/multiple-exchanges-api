@@ -642,6 +642,7 @@ app.post('/earnings-calendar/market-watch/scrape', async (req, res) => {
             headless: true,
             executablePath: '/usr/bin/chromium-browser',  // Correct path
             args: ['--no-sandbox', '--headless', '--disable-gpu', '--disable-dev-shm-usage'],
+            dumpio: true
         });
         console.log('puppeteer launched')
         const page = await browser.newPage();
