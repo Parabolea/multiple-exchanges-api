@@ -639,10 +639,9 @@ app.post('/earings-calendar/market-watch/scrape', async (req, res) => {
 
     try {
         const browser = await puppeteer.launch({
-            headless: 'new', // or true for older versions
+            headless: true,
             args: ['--no-sandbox', '--headless', '--disable-gpu', '--disable-dev-shm-usage'],
-            pipe: true,
-            dumpio: true
+            executablePath: '/usr/bin/chromium-browser', // Ensures Puppeteer finds Chromium
         });
         console.log('puppeteer launched')
         const page = await browser.newPage();
@@ -650,7 +649,7 @@ app.post('/earings-calendar/market-watch/scrape', async (req, res) => {
 
         await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36');
 
-        await page.goto(url, { waitUntil: 'domcontentloaded' });
+        await page.goto(url, { waitUntil: 'networkidle2' });
         console.log('went to the page')
         const content = await page.content();
         await browser.close();
