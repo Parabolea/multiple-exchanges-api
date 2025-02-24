@@ -640,7 +640,19 @@ app.post('/earings-calendar/market-watch/scrape', async (req, res) => {
     try {
         const browser = await puppeteer.launch({
             headless: true,
-            args: ['--no-sandbox', '--headless', '--disable-gpu', '--disable-dev-shm-usage'],
+            args: [
+                "--no-sandbox",
+                "--disable-setuid-sandbox",
+                "--disable-dev-shm-usage",
+                "--disable-gpu",
+                "--no-zygote",
+                "--disable-software-rasterizer",
+                "--disable-background-networking",
+                "--disable-default-apps",
+                "--disable-translate",
+                "--disable-sync",
+                "--disable-extensions",
+            ],
             executablePath: '/usr/bin/chromium-browser', // Ensures Puppeteer finds Chromium,
             dumpio: true
         });

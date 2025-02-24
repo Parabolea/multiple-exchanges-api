@@ -1,16 +1,28 @@
 FROM node:18-alpine
 
-# Set environment variables for Puppeteer
-ENV CHROME_BIN="/usr/bin/chromium-browser" \
-    PUPPETEER_SKIP_CHROMIUM_DOWNLOAD="true"
+RUN apk add --no-cache \
+  chromium \
+  nss \
+  freetype \
+  harfbuzz \
+  ca-certificates \
+  ttf-freefont \
+  dbus \
+  udev \
+  libx11 \
+  libxcomposite \
+  libxdamage \
+  libxtst \
+  libnss \
+  alsa-lib \
+  at-spi2-core \
+  mesa-dri-gallium \
+  xvfb
 
-RUN set -x \
-    && apk update \
-    && apk upgrade \
-    && apk add --no-cache \
-    udev \
-    ttf-freefont \
-    chromium
+# Set environment variables for Puppeteer
+ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser \
+    PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true \
+    PUPPETEER_DISABLE_HEADLESS_WARNING=true
 
 WORKDIR /app
 
