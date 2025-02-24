@@ -24,7 +24,7 @@ RUN apk add --no-cache \
     cairo \
     pango \
     glib \
-    alsa-lib \
+    alsa-lib
 
 # Set environment variables for Puppeteer
 ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser
