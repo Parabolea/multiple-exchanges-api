@@ -21,11 +21,10 @@ RUN apk add --no-cache \
     libxi \
     libxcursor \
     libxdamage \
-    libcairo \
+    cairo \
     pango \
     glib \
     alsa-lib \
-    atk
 
 # Set environment variables for Puppeteer
 ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser
