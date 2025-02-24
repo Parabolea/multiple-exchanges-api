@@ -640,12 +640,7 @@ app.post('/earings-calendar/market-watch/scrape', async (req, res) => {
     try {
         const browser = await puppeteer.launch({
             headless: 'new', // or true for older versions
-            args: [
-                '--no-sandbox',
-                '--disable-setuid-sandbox',
-                '--disable-gpu',
-                '--disable-software-rasterizer'
-            ],
+            args: ['--no-sandbox', '--headless', '--disable-gpu', '--disable-dev-shm-usage'],
             pipe: true,
             dumpio: true
         });
