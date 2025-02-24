@@ -641,7 +641,8 @@ app.post('/earings-calendar/market-watch/scrape', async (req, res) => {
         const browser = await puppeteer.launch({
             headless: true,
             args: ['--no-sandbox', '--headless', '--disable-gpu', '--disable-dev-shm-usage'],
-            executablePath: '/usr/bin/chromium-browser', // Ensures Puppeteer finds Chromium
+            executablePath: '/usr/bin/chromium-browser', // Ensures Puppeteer finds Chromium,
+            dumpio: true
         });
         console.log('puppeteer launched')
         const page = await browser.newPage();
