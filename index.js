@@ -712,6 +712,18 @@ app.get('/earnings-calendar/market-watch/cached', async (req, res) => {
     }
 })
 
+app.post('/earnings-calendar/market-watch/force-cache', async (req, res) => {
+    logger.info('TRIGGERED: /earnings-calendar/market-watch/force-cache')
+
+    try {
+        await redis.set('earnings-calendar/market-watch', JSON.stringify(req.body))
+    }
+    catch (e) {
+        console.error(e)
+        res.status(500).json({error: e})
+    }
+})
+
 initializeStockTickers().then(() => {
     server.listen(PORT, () => {
         console.log(`Server is running on http://localhost:${PORT}`);

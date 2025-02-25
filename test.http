@@ -836,3 +836,116 @@ GET {{host}}/earnings-calendar/market-watch/cached
 Content-Type: application/json
 
 {}
+
+### force cache into the market watch economic calendar
+GET {{host}}/earnings-calendar/market-watch/force-cache
+Content-Type: application/json
+
+{
+  "2025-02-24T00:00:00.000Z": [],
+  "2025-02-25T00:00:00.000Z": [
+    "Dallas Fed President Lorie Logan speaks in London",
+    "S&P Case-Shiller home price index (20 cities)",
+    "Consumer confidence",
+    "Fed Vice Chair for Supervision Michael Barr speaks",
+    "Richmond Fed President Tom Barkin speaks"
+  ],
+  "2025-02-26T00:00:00.000Z": [
+    "New home sales",
+    "Atlanta Fed President Raphael Bostic speaks"
+  ],
+  "2025-02-27T00:00:00.000Z": [
+    "Initial jobless claims",
+    "Durable-goods orders",
+    "Durable-goods minus transportation",
+    "GDP (second reading)",
+    "Kansas City Fed President Jeff Schmid speaks",
+    "Pending home sales",
+    "Federal Reserve Vice Chair for Supervision Michael Barr speaks",
+    "Fed Governor Michelle Bowman speaks",
+    "Cleveland Fed President Beth Hammack speaks",
+    "Philadelphia Fed President Patrick Harker speaks"
+  ],
+  "2025-02-28T00:00:00.000Z": [
+    "Personal income",
+    "Personal spending",
+    "PCE index",
+    "PCE (year-over-year)",
+    "Core PCE index",
+    "Core PCE (year-over-year)",
+    "Advanced U.S. trade balance in goods",
+    "Advanced retail inventories",
+    "Advanced wholesale inventories",
+    "Richmond Fed President Tom Barkin speaks",
+    "Chicago Business Barometer (PMI)",
+    "Chicago Fed President Austan Goolsbee speaks"
+  ],
+  "2025-03-03T00:00:00.000Z": [
+    "S&P final U.S. manufacturing PMI",
+    "Construction spending",
+    "ISM manufacturing",
+    "St. Louis Fed President Musalem speaks",
+    "Auto sales"
+  ],
+  "2025-03-04T00:00:00.000Z": [
+    "New York Fed President Williams speaks",
+    "Richmond Fed President Barkin speaks"
+  ],
+  "2025-03-05T00:00:00.000Z": [
+    "ADP employment",
+    "S&P final U.S. services PMI",
+    "Factory orders",
+    "ISM services",
+    "Fed Beige Book"
+  ],
+  "2025-03-06T00:00:00.000Z": [
+    "Initial jobless claims",
+    "U.S. productivity (final)",
+    "U.S. trade deficit",
+    "Wholesale inventories",
+    "Atlanta Fed President Bostic speaks"
+  ],
+  "2025-03-07T00:00:00.000Z": [
+    "U.S. jobs report",
+    "U.S. unemployment rate",
+    "U.S. hourly wages",
+    "Hourly wages year over year",
+    "New York Fed President Williams speaks",
+    "Consumer credit"
+  ],
+  "2025-02-17T00:00:00.000Z": [
+    "President's Day holiday",
+    "Philadelphia Fed President Patrick Harker speaks",
+    "Fed Governor Michelle Bowman speaks",
+    "Fed Governor Christopher Waller speaks"
+  ],
+  "2025-02-18T00:00:00.000Z": [
+    "Empire State manufacturing survey",
+    "Home builder confidence index",
+    "San Francisco Fed President Daly speaks",
+    "Fed Vice Chair for Supervision Michael Barr speaks"
+  ],
+  "2025-02-19T00:00:00.000Z": [
+    "Housing starts",
+    "Building permits",
+    "Minutes of Fed's January FOMC meeting",
+    "Fed Vice Chair Philip Jefferson speaks"
+  ],
+  "2025-02-20T00:00:00.000Z": [
+    "Initial jobless claims",
+    "Philadelphia Fed manufacturing survey",
+    "Chicago Fed President Austan Goolsbee speaks",
+    "U.S. leading economic indicators",
+    "St. Louis Fed President Alberto Musalem speaks",
+    "Fed Vice Chair for Supervision Michael Barr speaks",
+    "Fed Governor Adriana Kugler speaks"
+  ],
+  "2025-02-21T00:00:00.000Z": [
+    "S&P flash U.S. services PMI",
+    "S&P flash U.S. manufacturing PMI",
+    "Consumer sentiment (final)",
+    "Existing home sales",
+    "Fed Vice Chairman Philip Jefferson speaks",
+    "San Francisco Fed President Mary Daly opening remarks"
+  ]
+}
