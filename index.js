@@ -12,7 +12,11 @@ import winston from "winston";
 import momentTimezone from 'moment-timezone'
 import * as cheerio from 'cheerio'
 import moment from 'moment'
-import puppeteer from "puppeteer";
+import puppeteer from "puppeteer-extra";
+import userAgent from 'user-agents'
+import StealthPlugin from 'puppeteer-extra-plugin-stealth'
+
+puppeteer.use(StealthPlugin())
 
 dotenv.config()
 
@@ -632,7 +636,7 @@ const days = ['MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY'
 
 app.post('/earnings-calendar/market-watch/scrape', async (req, res) => {
     logger.info('TRIGGERED: /earnings-calendar/market-watch/scrape')
-    const url = 'https://www.marketwatch.com/economy-politics/calendar?mod=economy-politics'
+    const url = 'https://www.marketwatch.com/economy-politics/calendar'
     let usEconomicCalendarData = {}
 
     console.log({ PUPPETEER_EXECUTABLE_PATH: process.env.PUPPETEER_EXECUTABLE_PATH })
@@ -641,18 +645,27 @@ app.post('/earnings-calendar/market-watch/scrape', async (req, res) => {
         const browser = await puppeteer.launch({
             headless: true,
             executablePath: '/usr/bin/chromium-browser',  // Correct path
-            args: ['--no-sandbox', '--headless', '--disable-gpu', '--disable-dev-shm-usage'],
+            args: [
+                '--no-sandbox',
+                '--disable-setuid-sandbox',
+                '--disable-dev-shm-usage',
+                '--disable-gpu',
+                '--disable-software-rasterizer', // Prevents GPU usage
+                '--disable-features=Vulkan',
+            ],
             dumpio: true
         });
         console.log('puppeteer launched')
         const page = await browser.newPage();
         console.log('new page opened')
 
-        await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36');
+        await page.setUserAgent(userAgent.random().toString());
+        console.log(`user agent being used: ${userAgent.random().toString()}`)
 
         await page.goto(url, { waitUntil: 'networkidle2' });
         console.log('went to the page')
         const content = await page.content();
+        console.log({ content })
         await browser.close();
 
         const $ = cheerio.load(content)

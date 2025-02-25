@@ -9,8 +9,14 @@ RUN set -x \
     && apk upgrade \
     && apk add --no-cache \
     udev \
-    ttf-freefont \
     chromium \
+    nss \
+    freetype \
+    freetype-dev \
+    harfbuzz \
+    ca-certificates \
+    ttf-freefont \
+    dbus \
     && npm cache clean --force
 
 
