@@ -447,42 +447,43 @@ app.post('/vol-scanner/force-cache', async (req, res) => {
 })
 
 // interface will be { Date: string, Date: string }
-app.get('/earnings-calendar/points', async (req, res) => {
-    const {startDate, endDate} = req.query;
-
-    const startTimestamp = new Date(startDate).getTime();
-    const endTimestamp = new Date(endDate).getTime();
-
-    if (isNaN(startTimestamp) || isNaN(endTimestamp)) {
-        return res.status(400).json({error: "Invalid date format"});
-    }
-
-    try {
-        // Get event IDs within the date range
-        const eventIds = await redis.zrangebyscore("calendar_events", startTimestamp, endTimestamp);
-
-        if (eventIds.length === 0) {
-            return res.json({events: []}); // No events found
-        }
-
-        // Fetch event details for each event ID
-        const eventDetails = await Promise.all(
-            eventIds.map(async (id) => {
-                const details = await redis.hgetall(id);
-                return {id, ...details};
-            })
-        );
-
-        res.json(eventDetails);
-    } catch (error) {
-        res.status(500).json({error: error.message});
-    }
-});
-
+// app.get('/earnings-calendar/points', async (req, res) => {
+//     const {startDate, endDate} = req.query;
+//
+//     const startTimestamp = new Date(startDate).getTime();
+//     const endTimestamp = new Date(endDate).getTime();
+//
+//     if (isNaN(startTimestamp) || isNaN(endTimestamp)) {
+//         return res.status(400).json({error: "Invalid date format"});
+//     }
+//
+//     try {
+//         // Get event IDs within the date range
+//         const eventIds = await redis.zrangebyscore("calendar_events", startTimestamp, endTimestamp);
+//
+//         if (eventIds.length === 0) {
+//             return res.json({events: []}); // No events found
+//         }
+//
+//         // Fetch event details for each event ID
+//         const eventDetails = await Promise.all(
+//             eventIds.map(async (id) => {
+//                 const details = await redis.hgetall(id);
+//                 return {id, ...details};
+//             })
+//         );
+//
+//         res.json(eventDetails);
+//     } catch (error) {
+//         res.status(500).json({error: error.message});
+//     }
+// });
+//
 app.get('/earnings-calendar/points/cached', async (req, res) => {
     logger.info('TRIGGERED: /earnings-calendar/points/cached')
 
     const cachedData = await redis.get('earnings-calendar/points')
+    console.log({ cachedData })
     if (!cachedData) return res.status(404).json({error: "No cached data"});
     return res.status(200).json(JSON.parse(cachedData))
 })
@@ -493,14 +494,39 @@ app.post('/earnings-calendar/points/new', async (req, res) => {
     const {tickers, range} = req.body;
     console.log({tickers, range})
     try {
-        const pyCall = await PythonShell.run('./pyth/Earnings_Cal.py', {
+        const pyCall = await new PythonShell('./pyth/Earnings_Cal.py', {
             args: [
-                JSON.stringify(DEFAULT_TICKERS),
+                JSON.stringify(tickers),
                 range
             ],
             mode: 'text',
             pythonOptions: ['-u'],
         })
+
+        pyCall.on('stderr', message => {
+            console.log(message)
+        })
+
+        // Wait for the script to finish using a Promise
+        const results = await new Promise((resolve, reject) => {
+            let output = [];
+
+            pyCall.on('message', (message) => {
+                output.push(message); // Collect messages
+            });
+
+            pyCall.end((err, code, signal) => {
+                if (err) {
+                    console.error('Python script error:', err);
+                    return reject(err);
+                }
+                console.log('Python script finished with exit code:', code);
+                resolve(output);
+            });
+        });
+
+        // Store result in Redis and return response
+        if (!results.length) throw new Error('No output from Python script');
 
         // pyCall.on("message", message => {
         //     console.log('shell message: ', message)
@@ -510,9 +536,10 @@ app.post('/earnings-calendar/points/new', async (req, res) => {
         //     if (err) console.error('Python Script Error:', err);
         //     console.log('Python script finished with exit code:', code);
         // })
-        await redis.set('earnings-calendar/points', pyCall[0])
-        return res.status(200).json(JSON.parse(pyCall[0]))
+        await redis.set('earnings-calendar/points', results[0])
+        return res.status(200).json(JSON.parse(results[0]))
     } catch (error) {
+        console.error(error)
         res.status(500).json({error: error.message});
     }
 })
@@ -690,6 +717,10 @@ app.post('/earnings-calendar/market-watch/scrape', async (req, res) => {
             })
         })
 
+        if (Object.entries(usEconomicCalendarData).length <= 0) {
+            return res.status(500).json({})
+        }
+
         await redis.set('earnings-calendar/market-watch', JSON.stringify(usEconomicCalendarData))
         return res.status(200).json(usEconomicCalendarData)
     } catch (e) {
@@ -723,6 +754,9 @@ app.post('/earnings-calendar/market-watch/force-cache', async (req, res) => {
         res.status(500).json({error: e})
     }
 })
+
+// TODO: cron job for fetching market watch data
+// TODO: another cron job for fetching economic
 
 initializeStockTickers().then(() => {
     server.listen(PORT, () => {

@@ -801,7 +801,7 @@ POST {{host}}/earnings-calendar/points/new
 Content-Type: application/json
 
 {
-  "tickers": "",
+  "tickers": ["MSFT","COIN","MU","AAPL","TSLA","TSM","NVDA","MSTR","GOOG","META","AMZN","QQQ","ARM","YINN","QCOM","ARKB","AMD"],
   "range": "month"
 }
 
@@ -838,7 +838,7 @@ Content-Type: application/json
 {}
 
 ### force cache into the market watch economic calendar
-GET {{host}}/earnings-calendar/market-watch/force-cache
+POST {{host}}/earnings-calendar/market-watch/force-cache
 Content-Type: application/json
 
 {

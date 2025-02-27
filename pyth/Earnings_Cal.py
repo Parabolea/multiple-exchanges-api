@@ -2,6 +2,7 @@ import uuid
 import json
 import sys
 import csv
+import logging
 from enum import Enum
 
 import os
@@ -9,7 +10,11 @@ from dotenv import load_dotenv
 import requests
 from datetime import datetime, timedelta
 from utils import safe_json_dumps
+from setup import setup_logging
+
 load_dotenv('../.env')
+# setup_logging()
+logging.basicConfig(format='internal - %(asctime)s - %(levelname)s: %(message)s', level=logging.INFO, handlers=[logging.StreamHandler(sys.stderr)])
 
 API_KEY = os.getenv('ALPHA_VANTAGE_API_KEY')
 
@@ -17,8 +22,9 @@ API_KEY = os.getenv('ALPHA_VANTAGE_API_KEY')
 # print(f"second arg: {sys.argv[2]}")
 
 # List of stock symbols
-# stock_symbols = ['AAPL', 'MSFT', 'GOOGL', 'AMZN', 'NVDA', 'YINN', 'MU', 'COIN', 'TSM', 'SPY', 'TSLA']  # Add your desired stock symbols here
+# stock_symbols = ["MSFT","COIN","MU","AAPL","TSLA","TSM","NVDA","MSTR","GOOG","META","AMZN","QQQ","ARM","YINN","QCOM","ARKB","AMD"]  # Add your desired stock symbols here
 stock_symbols = json.loads(sys.argv[1])
+logging.info(f"inside script: {stock_symbols}")
 
 # Today's date
 today = datetime.today()
@@ -41,9 +47,17 @@ one_week_later_str = one_week_later.strftime('%Y-%m-%d')
 def get_earnings_calendar():
     url = f'https://www.alphavantage.co/query?function=EARNINGS_CALENDAR&horizon=3month&apikey={API_KEY}'
     response = requests.get(url)
+
+    if response.status_code != 200:
+        logging.error(f"Error fetching data: {response.status_code}")
+        return []
+
     decoded_content = response.content.decode('utf-8')
-    cr = csv.reader(decoded_content.splitlines(), delimiter=',')
+    cr = csv.DictReader(decoded_content.splitlines())
+
     earnings_list = list(cr)
+
+    logging.info(f"Earnings Data: {earnings_list[:5]}")  # Log only first 5 for readability
     return earnings_list
 
 # Fetch the earnings calendar data
@@ -52,20 +66,14 @@ earnings_data = get_earnings_calendar()
 # Store earnings data
 earnings_calendar = []
 
-# Parse CSV data
-# The first row contains headers
-headers = earnings_data[0]
-data_rows = earnings_data[1:]
-
-for row in data_rows:
-    # Create a dictionary for each row
-    event = dict(zip(headers, row))
+for event in earnings_data:
     symbol = event['symbol']
     report_date_str = event['reportDate']
     report_date = datetime.strptime(report_date_str, '%Y-%m-%d')
 
     # Check if the symbol is in our list and the report date is within the next week
     if (symbol in stock_symbols) and (today <= report_date <= one_week_later):
+        logging.info(f"{symbol} existing in earnings calendar")
         earnings_calendar.append({
             'id': str(uuid.uuid4()),
             'symbol': symbol,
@@ -74,6 +82,7 @@ for row in data_rows:
             'estimate': event.get('estimate', '')
         })
 
+logging.info(f"logging done, will now return {earnings_calendar}")
 # Print the earnings calendar
 # print("Upcoming Earnings in the Next Week:")
 # if earnings_calendar:

@@ -21,6 +21,9 @@ from requests_cache import CacheMixin, SQLiteCache
 from requests_ratelimiter import LimiterMixin, MemoryQueueBucket
 from pyrate_limiter import Duration, RequestRate, Limiter
 
+from pyth.setup import setup_logging
+
+
 # Define a class combining caching and rate limiting
 class CachedLimiterSession(CacheMixin, LimiterMixin, Session):
     pass
@@ -35,7 +38,7 @@ session = CachedLimiterSession(
 # Set a user-agent to reduce risk of being blocked
 session.headers["User-agent"] = "my-program/1.0"
 
-logging.basicConfig(format='internal - %(asctime)s - %(levelname)s: %(message)s', level=logging.INFO, handlers=[logging.StreamHandler(sys.stderr)])
+setup_logging()
 
 load_dotenv('../.env')
 
