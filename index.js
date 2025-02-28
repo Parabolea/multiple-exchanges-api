@@ -666,8 +666,6 @@ app.post('/earnings-calendar/market-watch/scrape', async (req, res) => {
     const url = 'https://www.marketwatch.com/economy-politics/calendar'
     let usEconomicCalendarData = {}
 
-    console.log({ PUPPETEER_EXECUTABLE_PATH: process.env.PUPPETEER_EXECUTABLE_PATH })
-
     try {
         const browser = await puppeteer.launch({
             headless: true,
