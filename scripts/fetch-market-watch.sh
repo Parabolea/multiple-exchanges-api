@@ -6,4 +6,4 @@ echo "Cron automated fetching from market watch"
 API_URL="https://dbapi.allview-parabolea.com/earnings-calendar/market-watch/scrape"
 
 # Make the request
-curl -X POST "$API_URL"
+/usr/bin/curl -X POST "$API_URL"
